@@ -165,3 +165,4 @@ logs/
 # 数据
 assets/data/*
 !assets/data/README.md
+**/data

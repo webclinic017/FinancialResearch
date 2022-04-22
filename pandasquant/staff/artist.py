@@ -1,81 +1,52 @@
+import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.ticker as mticker
+from ..tools import *
 
 
-class Drawer(object):
-    '''A Parameter Class for Drawing'''
-    def __init__(self, method: str = 'line', date: 'str | list | slice' = slice(None),
-        asset: 'str | list | slice' = slice(None), name: str = None, 
-        indicator: 'str | list | slice' = slice(None), title: str = 'Image', ax: plt.Axes = None, **kwargs):
-        self.method = method
-        self.date = date
-        self.indexer = eval(str([(date, asset), (name, indicator)]).replace('None, ', ''))
-        self.name = name
-        self.ax = ax
-        self.kwargs = kwargs
-        self.title = title
-        if not(self.is_ts or self.is_cs):
-            raise TypeError('indexer is wrongly set, please check')
+class Gallery():
+    def __init__(self, nrows: int, ncols: int, figsize: tuple = None) -> None:
+        self.nrows = nrows
+        self.ncols = ncols
+        self.figsize = (12 * ncols, 8 * nrows)
+
+    def __enter__(self):
+        fig, axes = plt.subplots(self.nrows, self.ncols, figsize=self.figsize)
+        axes = np.array(axes).reshape((self.nrows, self.ncols))
+        self.fig = fig
+        self.axes = axes
+        return (fig, axes)
     
-    @property
-    def is_ts(self) -> bool:
-        if isinstance(self.date, (slice, list)):
-            return True
-        else:
-            return False
-    
-    @property
-    def is_cs(self) -> bool:
-        if isinstance(self.date, (str, tuple)):
-            return True
-        else:
-            return False
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        for ax in self.axes.reshape(-1):
+            ax.xaxis.set_major_locator(mticker.MaxNLocator())
+        return False
 
-    @property
-    def unstack_level(self) -> str:
-        if self.is_ts:
-            return 'asset'
-        else:
-            return 'datetime'
+@pd.api.extensions.register_dataframe_accessor("drawer")
+class Drawer(Worker):
+
+    def draw(self, kind: str, 
+        datetime: str = slice(None), 
+        asset: str = slice(None), 
+        indicator: str = slice(None), 
+        **kwargs):
+        plotwised = self._indexer(datetime, asset, indicator)
+        if not isinstance(plotwised, (pd.Series, pd.DataFrame)):
+            raise ValueError('Your slice data seems not to be a plotable data')
         
-class DataDrawer(Drawer):
-    '''A Drawer for Data Class'''
+        elif not isinstance(datetime, str):
+            plotwised.index = plotwised.index.strftime(r'%Y-%m-%d')
 
-    def __init__(self, method: str = 'line', date: 'str | list | slice' = slice(None), 
-        asset: 'str | list | slice' = slice(None), indicator: 'str | list | slice' = slice(None), 
-        title: str = 'Image', ax: plt.Axes = None, **kwargs):
-        super().__init__(method, date, asset, None, indicator, title, ax, **kwargs)
+        plotwised.plot(kind=kind, **kwargs)
 
-class CollectionDrawer(Drawer):
-    '''A Drawer for Collection Class'''
 
-    def __init__(self, method: str = 'line', date: 'str | list | slice' = slice(None), 
-        asset: 'str | list | slice' = slice(None), name: str = slice(None), 
-        indicator: 'str | list | slice' = slice(None), 
-        title: str = 'Image', ax: plt.Axes = None, **kwargs):
-        super().__init__(method, date, asset, name, indicator, title, ax, **kwargs)
-
-class PriceDataDrawer(DataDrawer):
-    '''A Drawer for PriceData Class'''
-    def __init__(self, method: str = 'line', date: 'str | list | slice' = slice(None), 
-        asset: 'str | list | slice' = slice(None), indicator: 'str | list | slice' = None, title: str = 'Image', ax: plt.Axes = None, **kwargs):
-        if isinstance(indicator, 'str'):
-            indicator = [indicator, 'price']
-        elif isinstance(indicator, list):
-            indicator.append('price')
-        super().__init__(method, date, asset, indicator, title, ax, **kwargs)
-
-class PriceCollectionDrawer(CollectionDrawer):
-    '''A Drawer for PriceCollection Class'''
-    def __init__(self, method: str = 'line', date: 'str | list | slice' = slice(None), 
-        asset: 'str | list | slice' = slice(None), name: str = None, 
-        indicator: 'str | list | slice' = None, 
-        title: str = 'Image', ax: plt.Axes = None, **kwargs):
-        if isinstance(name, list):
-            name += ['price']
-        elif isinstance(name, str):
-            name = [name, 'price']
-        if isinstance(indicator, list):
-            indicator += ['price']
-        elif isinstance(indicator, str):
-            indicator = [indicator, 'price']
-        super().__init__(method, date, asset, name, indicator, title, ax, **kwargs)
+if __name__ == "__main__":
+    data = pd.DataFrame(np.random.rand(100,2), index=pd.date_range('20200101', periods=100), columns=list('ab'))
+    with Gallery(1, 2) as (_, axes):
+        data.drawer.draw('line', indicator='a', color='red', ax=axes[0,0])
+        data.drawer.draw('bar', indicator='a', color='green', ax=axes[0, 0].twinx())
+        data.drawer.draw('line', indicator='b', color='blue', ax=axes[0, 1])
+    
+    plt.savefig('test.png')
+    

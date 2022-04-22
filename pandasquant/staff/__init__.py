@@ -1,10 +1,15 @@
-from .analyst import (Analyzer)
+from .artist import (
+    Drawer,
+    Gallery
+)
+
+from .analyst import (
+    Analyzer
+)
 
 from .fetcher import (
-    read_excel,
-    Fetcher,
-    read_csv_directory
-    )
+    Filer
+)
 
 from .calculator import (
     Calculator
@@ -16,10 +21,10 @@ from .processor import (
 
 
 __all__ = [
-    'Analyzer', 
-    'read_excel',
-    'read_csv_directory',
-    'Fetcher',
+    'Drawer',
+    'Gallery',
+    'Analyzer',
+    'Filer',
     'Calculator',
     'PreProcessor',
     ]
