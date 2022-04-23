@@ -6,7 +6,15 @@ from ..tools import *
 class Calculator(Worker):
     
     def rolling(self, window: int, func, *args, grouper = None, **kwargs):
-        ''''''
+        '''Provide rolling window func apply for pandas dataframe
+        ----------------------------------------------------------
+
+        window: int, the rolling window length
+        func: unit calculation function
+        args: arguments apply to func
+        grouper: the grouper applied in func
+        kwargs: the keyword argument applied in func
+        '''
         if self.type_ == Worker.TIMESERIES:
             datetime_index = self.dataframe.index
         elif self.type_ == Worker.PANEL:
