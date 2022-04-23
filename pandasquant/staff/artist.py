@@ -6,10 +6,13 @@ from ..tools import *
 
 
 class Gallery():
-    def __init__(self, nrows: int, ncols: int, figsize: tuple = None) -> None:
+    def __init__(self, nrows: int, ncols: int, figsize: tuple = None,
+        show: bool = True, path: str = None) -> None:
         self.nrows = nrows
         self.ncols = ncols
         self.figsize = (12 * ncols, 8 * nrows)
+        self.show = show
+        self.path = path
 
     def __enter__(self):
         fig, axes = plt.subplots(self.nrows, self.ncols, figsize=self.figsize)
@@ -21,6 +24,12 @@ class Gallery():
     def __exit__(self, exc_type, exc_val, exc_tb):
         for ax in self.axes.reshape(-1):
             ax.xaxis.set_major_locator(mticker.MaxNLocator())
+
+        if self.path:
+            plt.savefig(self.path)
+        if self.show:
+            plt.show()
+            
         return False
 
 @pd.api.extensions.register_dataframe_accessor("drawer")
@@ -47,6 +56,4 @@ if __name__ == "__main__":
         data.drawer.draw('line', indicator='a', color='red', ax=axes[0,0])
         data.drawer.draw('bar', indicator='a', color='green', ax=axes[0, 0].twinx())
         data.drawer.draw('line', indicator='b', color='blue', ax=axes[0, 1])
-    
-    plt.savefig('test.png')
     

@@ -25,8 +25,6 @@ pandasquant中主要负责窗口计算的“员工”，在我们计算指标的
 >   grouper: the grouper applied in func
 >   kwargs: the keyword argument applied in func
 
-
-
 ```python
 import pandas as pd
 import numpy as np
