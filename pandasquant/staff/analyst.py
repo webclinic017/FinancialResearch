@@ -45,10 +45,6 @@ class Describer(Worker):
             else:
                 return tcor
 
-@pd.api.extensions.register_dataframe_accessor("position")
-class Position(Worker):
-    pass
-
 class _Analyzer(object):
     '''Analyzer is a general analyst dedicated to analyze the AnalyzeData
     =====================================================================
