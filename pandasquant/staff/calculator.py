@@ -34,4 +34,10 @@ class Calculator(Worker):
             result.append(window_result)
         
         result = pd.concat(result)
+
+        if grouper is not None:
+            result = result.swaplevel(0, 1).sort_index()
+        if isinstance(result, pd.Series):
+            result = result.to_frame()
+
         return result

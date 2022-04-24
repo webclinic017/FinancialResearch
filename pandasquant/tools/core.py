@@ -224,14 +224,14 @@ class Worker(object):
             return self.dataframe.loc[(datetime, indicator)].copy()
             
         elif self.type_ == Worker.PANEL:
-            if isinstance(datetime, str) and not isinstance(asset, str) and not isinstance(indicator, str):
+            if isinstance(datetime, str):
                 return self.dataframe.loc[(datetime, asset), indicator].droplevel(0).copy()
-            elif not isinstance(datetime, str) and isinstance(asset, str) and not isinstance(indicator, str):
-                return self.dataframe.loc[(datetime, asset), indicator].droplevel(1).copy()
-            elif not isinstance(datetime, str) and not isinstance(asset, str) and isinstance(indicator, str):
-                return self.dataframe.loc[(datetime, asset), indicator].unstack(level=1).copy()
             else:
-                return self.loc[(datetime, asset), indicator].copy()
+                if isinstance(asset, str):
+                    return self.dataframe.loc[(datetime, asset), indicator].droplevel(1).copy()
+                if isinstance(indicator, str):
+                    return self.dataframe.loc[(datetime, asset), indicator].unstack(level=1).copy()
+                return self.dataframe.loc[(datetime, asset), indicator].copy()
     
 
 if __name__ == "__main__":
