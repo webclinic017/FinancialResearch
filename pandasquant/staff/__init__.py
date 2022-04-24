@@ -4,7 +4,8 @@ from .artist import (
 )
 
 from .analyst import (
-    Analyzer
+    Regressor,
+    Describer
 )
 
 from .fetcher import (
@@ -23,7 +24,8 @@ from .processor import (
 __all__ = [
     'Drawer',
     'Gallery',
-    'Analyzer',
+    'Regressor',
+    'Describer',
     'Filer',
     'Calculator',
     'PreProcessor',
