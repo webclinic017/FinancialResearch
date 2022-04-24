@@ -1,3 +1,4 @@
+from email.headerregistry import Group
 import numpy as np
 import pandas as pd
 from ..tools import *
@@ -180,12 +181,17 @@ class PreProcessor(Worker):
         category.name = name
         return category
 
-    def logret2algret(logret):
-        return np.exp(logret) - 1
+    def logret2algret(self):
+        return np.exp(self.dataframe) - 1
     
-    def algret2logret(algret):
-        return np.log(algret + 1)
+    def algret2logret(self):
+        return np.log(self.dataframe)
 
+    def resample(self, rule: str, **kwargs):
+        if self.type_ == Worker.TIMESERIES:
+            return self.dataframe.resample(rule, **kwargs)
+        elif self.type_ == Worker.PANEL:
+            return self.dataframe.groupby([pd.Grouper(level=0, freq=rule, **kwargs), pd.Grouper(level=1)])
 
 if __name__ == "__main__":
     import numpy as np
