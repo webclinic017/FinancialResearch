@@ -127,10 +127,10 @@ class PreProcessor(Worker):
             ]).first().loc[:, open_column]
 
         elif self.type_ == Worker.TIMESERIES:
-            close_price = self.dataframe.resample(period, label='right')\
-                .last().loc[:, close_column]
-            open_price = self.dataframe.resample(period, label='right')\
-                .first().loc[:, open_column]
+            close_price = self.dataframe.\
+                resample(period, label='right').last()
+            open_price = self.dataframe.\
+                resample(period, label='right').first()
 
         return (close_price - open_price) / open_price
 
@@ -148,10 +148,10 @@ class PreProcessor(Worker):
             ]).first().loc[:, open_column]
 
         elif self.type_ == Worker.TIMESERIES:
-            close_price = self.dataframe.resample(period, label='left')\
-                .last().loc[:, close_column]
-            open_price = self.dataframe.resample(period, label='left')\
-                .first().loc[:, open_column]
+            close_price = self.dataframe.\
+                resample(period, label='left').last()
+            open_price = self.dataframe.\
+                resample(period, label='left').first()
 
         return (close_price - open_price) / open_price
         

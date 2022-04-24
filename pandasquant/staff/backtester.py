@@ -17,3 +17,7 @@ class Relocator(Worker):
                 (x.loc[:, weight_col] * x.loc[:, forward_col]).sum()
                 / x.loc[:, weight_col].sum()
             )
+
+@pd.api.extensions.register_dataframe_accessor("backtester")
+class Backtester(Worker):
+    pass
