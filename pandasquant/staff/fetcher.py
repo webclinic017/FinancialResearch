@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 from ..tools import *
+from functools import lru_cache
 
 
 @pd.api.extensions.register_dataframe_accessor("filer")
@@ -135,11 +136,31 @@ class Filer(Worker):
 class Databaser(object):
     pass
 
+class StockUS():
+    
+    root = "https://api.stock.us/api/v1/"
+
+    def __init__(self, sessionid: str):
+        StockUS.sessionid = sessionid
+        StockUS.headers = {
+            "Cookie": f"sessionid={sessionid}",
+            "Host": "api.stock.us",
+            "Origin": "https://stock.us"
+        }
+
+    @classmethod
+    @lru_cache(maxsize=None, typed=False)
+    def index_price(cls, index: str, start: str, end: str):
+        url = cls.root + f"index-price?security_code={index}&start={start}&stop={end}"
+        res = Request(url, headers=cls.headers).get().json
+        price = pd.DataFrame(res['price'])
+        price['date'] = pd.to_datetime(price['date'])
+        price = price.set_index('date')
+        return price
+
 
 if __name__ == '__main__':
-    import numpy as np
-
-    data = pd.DataFrame(np.random.rand(100, 20), 
-        index=pd.MultiIndex.from_product([pd.date_range('20210101', periods=5), range(20)]))
-    data.fetcher.to_multisheet_excel('test.xlsx')
+    fetcher = StockUS("guflrppo3jct4mon7kw13fmv3dsz9kf2")
+    price = fetcher.index_price('000001.SH', '20100101', '20200101')
+    print(price)
     

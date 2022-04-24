@@ -1,10 +1,12 @@
 from .core import (
-    PanelFrame, 
-    Worker
+    Worker,
+    Request,
+    ProxyRequest
     )
 
 
 __all__ = [
-    'PanelFrame', 
-    'Worker'
+    'Worker',
+    'Request',
+    'ProxyRequest'
     ]
