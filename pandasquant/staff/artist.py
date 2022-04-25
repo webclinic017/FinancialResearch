@@ -6,6 +6,18 @@ from ..tools import *
 
 
 class Gallery():
+    '''Gallery is a context manager, so you can use it like this:
+    
+    >> with Gallery(nrows=2, ncols=3, figsize=(12, 8), show=True, path='/tmp/test.png') as (fig, axes):
+            axes[0, 0].plot(range(10))
+            axes[0, 1].plot(range(10))
+            axes[0, 2].plot(range(10))
+    
+    it will automatically create a figure with assigned columns and rows in figsize,
+    and after plotting, it will automatically save the figure to path or show it in a window,
+    and at the same time, will set all timeseries index to be displayed in a human-readable format.
+    '''
+    
     def __init__(self, nrows: int, ncols: int, figsize: tuple = None,
         show: bool = True, path: str = None) -> None:
         self.nrows = nrows
@@ -33,13 +45,24 @@ class Gallery():
         return False
 
 @pd.api.extensions.register_dataframe_accessor("drawer")
+@pd.api.extensions.register_series_accessor("drawer")
 class Drawer(Worker):
+    '''Drawer is a staff of pandasquant for visulaizing data'''
 
     def draw(self, kind: str, 
         datetime: str = slice(None), 
         asset: str = slice(None), 
         indicator: str = slice(None), 
         **kwargs):
+        '''Draw a image of the given slice of data
+        ------------------------------------------
+
+        kind: str, the kind of the plot
+        datetime: str, the slice of datetime, default to all time period
+        asset: str, the slice of asset, default to all assets
+        indicator: str, the slice of indicator, default to all indicators
+        kwargs: dict, the kwargs for the plot function
+        '''
         plotwised = self._indexer(datetime, asset, indicator)
         if not isinstance(plotwised, (pd.Series, pd.DataFrame)):
             raise ValueError('Your slice data seems not to be a plotable data')

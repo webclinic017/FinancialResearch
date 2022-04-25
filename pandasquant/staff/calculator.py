@@ -3,6 +3,7 @@ from ..tools import *
 
 
 @pd.api.extensions.register_dataframe_accessor("calculator")
+@pd.api.extensions.register_series_accessor("calculator")
 class Calculator(Worker):
     
     def rolling(self, window: int, func, *args, grouper = None, **kwargs):
@@ -15,7 +16,9 @@ class Calculator(Worker):
         grouper: the grouper applied in func
         kwargs: the keyword argument applied in func
         '''
-        data = self.dataframe.sort_index().copy()
+        # in case of unsorted level
+        data = self.data.sort_index().copy()
+
         if self.type_ == Worker.TIMESERIES:
             datetime_index = data.index
         elif self.type_ == Worker.PANEL:
@@ -37,7 +40,5 @@ class Calculator(Worker):
 
         if grouper is not None:
             result = result.swaplevel(0, 1).sort_index()
-        if isinstance(result, pd.Series):
-            result = result.to_frame()
 
         return result
