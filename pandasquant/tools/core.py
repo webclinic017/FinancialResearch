@@ -46,9 +46,12 @@ class Worker(object):
             
         elif self.type_ == Worker.PANEL:
             if isinstance(datetime, str):
+                # 当datetime为str同时asset与indicator也为str返回为数字，导致后续droplevel报错；
+                # 同时无法保证asset与indicator类型返回数据不一定是双索引的，可能导致droplevel报错
                 return self.dataframe.loc[(datetime, asset), indicator].droplevel(0).copy()
             else:
                 if isinstance(asset, str):
+                    # asset与indicator类型不确定时返回值可能没有droplevel方法
                     return self.dataframe.loc[(datetime, asset), indicator].droplevel(1).copy()
                 if isinstance(indicator, str):
                     return self.dataframe.loc[(datetime, asset), indicator].unstack(level=1).copy()

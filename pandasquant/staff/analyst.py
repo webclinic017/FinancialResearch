@@ -25,6 +25,7 @@ class Regressor(Worker):
             return self.dataframe.groupby(level=0).apply(_reg)
             
         else:
+            # 截面数据也应当支持回归，这里截面回归也可以用_reg
             raise TypeError('ols currently only support for panel and timeseries data')
 
 @pd.api.extensions.register_dataframe_accessor("describer")
@@ -38,10 +39,12 @@ class Describer(Worker):
             tcor = self.dataframe.groupby(level=0).corr()
             if tvalue:
                 n = tcor.index.levels[0].size
-                mean = tcor.groupby(level=0).mean()
-                std = tcor.groupby(level=0).std()
+                mean = tcor.groupby(level=1).mean()
+                std = tcor.groupby(level=1).std()
                 t = mean / std * np.sqrt(n)
+                t = t.loc[t.columns, t.columns].replace(np.inf, np.nan).replace(-np.inf, np.nan)
                 return t
+            # 这里的else可以不要，注意代码风格
             else:
                 return tcor
 
