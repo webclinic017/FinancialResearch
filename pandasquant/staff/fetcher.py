@@ -157,10 +157,20 @@ class StockUS():
         price['date'] = pd.to_datetime(price['date'])
         price = price.set_index('date')
         return price
+    
+    @classmethod
+    @lru_cache(maxsize=None, typed=False)
+    def cn_price(cls, code: str, start: str, end: str):
+        url = cls.root + f"cn-price?security_code={code}&start={start}&stop={end}"
+        res = Request(url, headers=cls.headers).get().json
+        price = pd.DataFrame(res['price'])
+        price['date'] = pd.to_datetime(price['date'])
+        price = price.set_index('date')
+        return price
 
 
 if __name__ == '__main__':
     fetcher = StockUS("guflrppo3jct4mon7kw13fmv3dsz9kf2")
-    price = fetcher.index_price('000001.SH', '20100101', '20200101')
+    price = fetcher.cn_price('000001.SZ', '20100101', '20200101')
     print(price)
     
