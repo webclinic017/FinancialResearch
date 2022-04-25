@@ -5,7 +5,6 @@ from ..tools import *
 from functools import lru_cache
 from sqlalchemy.pool import NullPool
 from sqlalchemy import create_engine
-from sqlalchemy.pool import NullPool
 
 
 @pd.api.extensions.register_dataframe_accessor("filer")
@@ -158,6 +157,34 @@ class Database(object):
             Database.today = today.strftime(r'%Y%m%d')
     
     @classmethod
+    def _get_panel_data(cls, start: str, end: str, date_col: str,
+        code: 'str | list', code_col: str, fields: list, 
+        table: str, database, index: list) -> pd.DataFrame:
+        start = start or '20100101'
+        end = end or cls.today
+        if isinstance(code, str):
+            code = [code]
+        
+        if fields:
+            fields = ','.join(fields)
+        else:
+            fields = '*'
+        
+        query = f'select {fields} from {table}' \
+            f' where {date_col} between "{start}" and "{end}"' \
+            
+        if code:
+            query += ' and ' + ' or '.join([rf'{code_col} like "%%{c}%%"' for c in code])
+        
+        data = pd.read_sql(query, database)
+        
+        index = list(filter(lambda x: x in fields, index))
+        if index:
+            data = data.set_index(index)
+        
+        return data
+
+    @classmethod
     def trade_date(cls, start: str = None,
         end: str = None, freq: str = 'daily',
         weekday: int = None) -> list[str]:
@@ -168,10 +195,8 @@ class Database(object):
         end: datetime or date or str, end date in 3 forms
         freq: str, frequency in either 'daily', 'weekly' or 'monthly'
         '''
-        if start is None:
-            start = cls.today
-        if end is None:
-            end = cls.today
+        start = start or "20100101"
+        end = end or cls.today
         
         query = f"select trade_date from trade_date_{freq} " \
                 f"where trade_date >= '{start}' " \
@@ -185,10 +210,8 @@ class Database(object):
         return data
 
     @classmethod
-    def market_daily(cls, start: str = None,
-        end: str = None,
-        code: 'str | list' = None,
-        fields: list = None) -> pd.DataFrame:
+    def market_daily(cls, start: str = None, end: str = None,
+        code: 'str | list' = None, fields: list = None) -> pd.DataFrame:
         '''get market data in daily frequency
         -------------------------------------
 
@@ -196,37 +219,17 @@ class Database(object):
         end: datetime or date or str, end date in 3 forms
         fields: list, the field names you want to get
         '''
-        # process parameters
-        if start is None:
-            start = "20100101"
-        if end is None:
-            end = cls.today
-
-        if isinstance(code, str):
-            code = [code]
-
-        # constructing query
-        if fields is None:
-            fields = '*'
-        else:
-            fields = [f'`{i}`' for i in fields]
-            fields = ', '.join(fields)
-
-        query = f'select {fields} from market_daily' \
-            f' where trade_date >= "{start}"' \
-            f' and trade_date <= "{end}"' \
-        
-        if code:
-            query += ' and '
-            query += ' or '.join([f'code like "%%{c}%%"' for c in code])
-
-        data = pd.read_sql(query, cls.stock)
-
-        # modify dataframe index
-        index = ['trade_date', 'code']
-        index = list(filter(lambda x: x in fields, index))
-        if index:
-            data = data.set_index(index)
+        data = cls._get_panel_data(
+            start = start,
+            end = end,
+            date_col = "trade_date",
+            code = code,
+            code_col = "code",
+            fields = fields,
+            table = 'market_daily',
+            database = cls.stock,
+            index = ['trade_date', 'code']
+        )
         return data
 
     @classmethod
@@ -241,40 +244,22 @@ class Database(object):
         fields: list, the field names you want to get
         conditions: list, a series of conditions like "code = '000001.SZ'" listed in a list
         '''
-        if start is None:
-            start = "20100101"
-        if end is None:
-            end = cls.today
-        if isinstance(code, str):
-            code = [code]
-
-        # constructing query
-        if fields is None:
-            fields = '*'
-        else:
-            fields = ', '.join(fields)
-            
-        query = f'select {fields} from index_market_daily ' \
-            f'where trade_date >= "{start}"' \
-            f' and trade_date <= "{end}"' \
-        
-        if code:
-            query += ' and '
-            query += ' or '.join([f'code like "%%{c}%%"' for c in code])
-        
-        data = pd.read_sql(query, cls.stock)
-
-        # modify dataframe index
-        index = ['trade_date', 'index_code']
-        index = list(filter(lambda x: x in fields, index))
-        if index:
-            data = data.set_index(index)
-            
+        data = cls._get_panel_data(
+            start = start,
+            end = end,
+            date_col = "trade_date",
+            code = code,
+            code_col = "index_code",
+            fields = fields,
+            table = 'index_market_daily',
+            database = cls.stock,
+            index = ['trade_date', 'code']
+        )
         return data
 
-    def plate_info(cls, start: 'datetime.datetime | datetime.date | str',
-        end: 'datetime.datetime | datetime.date | str',
-        fields: list = None, conditions: list = None) -> pd.DataFrame:
+    @classmethod
+    def plate_info(cls, start: str = None, end: str = None, 
+        code: 'list | str' = None, fields: list = None) -> pd.DataFrame:
         '''get plate info in daily frequency
         -------------------------------------
 
@@ -283,34 +268,22 @@ class Database(object):
         fields: list, the field names you want to get
         conditions: list, a series of conditions like "code = '000001.SZ'" listed in a list
         '''
-        start = time2str(start)
-        end = time2str(end)
-        # get data
-        if fields is None:
-            fields = '*'
-        else:
-            fields = ', '.join(fields)
-        sql = f'select {fields} from plate_info ' + \
-            f'where trade_date >= "{start}" and trade_date <= "{end}"'
-        if conditions:
-            conditions = 'and ' + 'and'.join(conditions)
-            sql += conditions
-        data = pd.read_sql(sql, cls.stock)
-
-        # modify time format
-        if 'trade_date' in fields:
-            data.trade_date = pd.to_datetime(data.trade_date)
-        
-        # modify dataframe index
-        index = ['trade_date', 'code']
-        index = list(filter(lambda x: x in fields, index))
-        if index:
-            data = data.set_index(index)
+        data = cls._get_panel_data(
+            start = start,
+            end = end,
+            date_col = 'trade_date',
+            code = code,
+            code_col = "code",
+            fields = fields,
+            table = 'plate_info',
+            database = cls.stock,
+            index = ['trade_date', 'code']
+        )
         return data
 
-    def derivative_indicator(cls, start: 'datetime.datetime | datetime.date | str',
-        end: 'datetime.datetime | datetime.date | str',
-        fields: list = None, conditions: list = None) -> pd.DataFrame:
+    @classmethod
+    def derivative_indicator(cls, start: str = None, end: str = None,
+        code: 'str | list' = None, fields: list = None) -> pd.DataFrame:
         '''get derivative indicator in daily frequecy
         ---------------------------------------------
 
@@ -319,59 +292,56 @@ class Database(object):
         fields: list, the field names you want to get
         conditions: list, a series of conditions like "code = '000001.SZ'" listed in a list
         '''
-        start = time2str(start)
-        end = time2str(end)
-        # get data
-        if fields is None:
-            fields = '*'
-        else:
-            fields = ', '.join(fields)
-        sql = f'select {fields} from derivative_indicator ' + \
-            f'where trade_date >= "{start}" and trade_date <= "{end}"'
-        if conditions:
-            conditions = 'and ' + 'and'.join(conditions)
-            sql += conditions
-        data = pd.read_sql(sql, cls.stock)
-
-        # modify time format
-        if 'trade_dt' in fields:
-            data.trade_dt = pd.to_datetime(data.trade_dt)
-        
-        # modify dataframe index
-        index = ['trade_dt', 's_info_windcode']
-        index = list(filter(lambda x: x in fields, index))
-        if index:
-            data = data.set_index(index)
+        data = cls._get_panel_data(
+            start = start,
+            end = end,
+            date_col = 'trade_date',
+            code = code,
+            code_col = "wind_code",
+            fields = fields,
+            table = 'derivative_indicator',
+            database = cls.stock,
+            index = ['trade_date', 'code']
+        )
         return data
     
-    def active_opdep(cls, date: 'datetime.datetime | datetime.date | str') -> pd.DataFrame:
+    @classmethod
+    def active_opdep(cls, start: 'str' = None, end: 'str' = None,
+        code: 'list | str' = None, fields: list = None) -> pd.DataFrame:
         """
-        返回龙虎榜数据
-        date: 日期
-        return: 返回dataframe
+        Get Longhubang data
+        -------------------
+
+        date: str, the date
         """
-        date = time2str(date)
-        sql = f'select opdep_abbrname, onlist_date, buy_stock_code, buy_stock_name ' + \
-            f'from active_opdep ' + \
-            f'where onlist_date = "{date}"'
-        data = pd.read_sql(sql, cls.stock)
+        data = cls._get_panel_data(
+            start = start,
+            end = end,
+            date_col = "onlist_date",
+            code = code,
+            code_col = "buy_stock_code",
+            fields = fields,
+            table = 'plate_info',
+            database = cls.stock,
+            index = ['trade_date', 'code']
+        )
         return data
 
-    def active_opdep_restart_for_a_stock(cls, 
-        date: 'datetime.datetime | datetime.date | str', 
-        code: str, gap: int) -> datetime:
-        """
-        根据给定日期和股票代码, 返回龙虎榜该股票最近一次活跃开始的时间
-        date: datetime, 日期
-        code: str, 股票代码
-        gap: int, 定义一个重新活跃的阈值
-        return: str, 返回日期
+    @classmethod
+    def active_opdep_react_stock(cls, date: str, code: str, gap: int) -> datetime.datetime:
+        """Get the reactivating date for a stock from active_opdep for a given date
+        ------------------------------------------------------------------------------
+
+        date: datetime, date
+        code: str, stock code
+        gap: int, the days gap at least between the two activating date
+        return: datetime, return the date
         """
         date = time2str(date)
-        sql = f'select opdep_abbrname, onlist_date, buy_stock_code, buy_stock_name ' + \
-            f'from active_opdep ' + \
-            f'where buy_stock_code like "%%{code}%%" ' + \
-            f'and onlist_date <= "{date}" ' + \
+        sql = f'select opdep_abbrname, onlist_date, buy_stock_code, buy_stock_name ' \
+            f'from active_opdep ' \
+            f'where buy_stock_code like "%%{code}%%" ' \
+            f'and onlist_date <= "{date}" ' \
             f'order by onlist_date desc'
         data = pd.read_sql(sql, cls.stock)
         date = data['onlist_date'].to_frame()
@@ -383,24 +353,24 @@ class Database(object):
                 early_date = date.iloc[i, :]['onlist_date'];break
         early_date = str2time(early_date)
         return early_date
-    
-    def active_opdep_restart_for_a_plate(date: 'datetime.datetime | datetime.date | str',
-                                        plate: str, 
-                                        gap: int) -> datetime:
-        """
-        查询龙虎榜, 查询某一板块再给定日期下, 最近一次活跃的时间
-        date: datetime, 
-        plate: str, 行业
-        gap: int, 定义一个重新活跃度阈值
-        return
+        
+    @classmethod
+    def active_opdep_react_plate(cls, date: str, plate: str, gap: int) -> datetime:
+        """Get the reactivating date for a plate from active_opdep for a given date
+        ---------------------------------------------------------------------------
+
+        date: datetime, the given date
+        plate: str, industry or plate
+        gap: int, the days gap at least between the two activating date
+        return: datetime, return the date
         """
         date = time2str(date)
-        sql = f'select * from active_opdep_plates ' + \
-            f'where plates like "%%{plate}%%" ' + \
-            f'and trade_date <= "{date}"' + \
-            f'order by trade_date desc ' + \
+        sql = f'select * from active_opdep_plates ' \
+            f'where plates like "%%{plate}%%" ' \
+            f'and trade_date <= "{date}"' \
+            f'order by trade_date desc ' \
             f'limit 1000'
-        data = pd.read_sql(sql, stock)
+        data = pd.read_sql(sql, cls.stock)
         date = data['trade_date'].to_frame()
         date['previous'] = data['trade_date'].shift(periods=-1)
         date['diff'] = date['trade_date'] - date['previous']
@@ -410,91 +380,129 @@ class Database(object):
                 early_date = date.iloc[i, :]['trade_date'];break
         early_date = str2time(early_date)
         return early_date
+    
+    @classmethod
+    def shhk_transaction(cls, start: str = None, end: str = None,
+        fields: list = None) -> pd.DataFrame:
+        '''Get north money buy data
+        ---------------------------
 
-    def stock2plate(date: 'datetime.datetime | datetime.date | str',
-                    code: str,
-                    fields: list) -> str:
-        """
-        查询股票所属的板块
-        date, datetime,
-        code, str, 股票代码
-        fields, list, 例如['swname_level3']  查询字段
-        return
-        """
-        date = time2str(date)
-        if fields is None:
-            fields = '*'
-        else:
-            fields = ', '.join(fields)
-
-        sql = f'select {fields} from plate_info ' + \
-            f'where trade_date = "{date}" ' + \
-            f'and code = "{code}"'
-        data = pd.read_sql(sql, stock)
-        if data.empty:
-            return None
-        else:
-            return data.values[0][0]
-
-    def group_stock_by_industry(date: 'datetime.datetime | datetime.date | str',
-                                plate: str, 
-                                field: str) -> pd.DataFrame:
-        """
-        返回一个板块下的所有股票
-        date: datetime, 日期
-        plate: str, 行业
-        field: str, 分类标准
-        return: 
-        """
-        date = time2str(date)
-        sql = f'select code ' + \
-            f'from plate_info ' + \
-            f'where {field} = "{plate}" ' + \
-            f'and trade_date = "{date}"'
-        data = pd.read_sql(sql, stock)
+        start: str, start date
+        end: str, end date
+        '''
+        data = cls._get_panel_data(
+            start = start,
+            end = end,
+            date_col = 'trade_date',
+            code = None,
+            code_col = None,
+            fields = fields,
+            table = 'shhk_transaction',
+            database = cls.stock,
+            index = ['trade_date']
+        )
         return data
 
-    def north_money_tot():
-        sql = f'select date, sh_cumulative_net_buy ' + \
-            f'from shhk_transaction ' + \
-            f'order by date'
-        data_a = pd.read_sql(sql, stock)
-        sql = f'select date, sz_cumulative_net_buy ' + \
-            f'from szhk_transaction ' + \
-            f'order by date'
-        data_b = pd.read_sql(sql, stock)
-        return data_a, data_b
+    @classmethod
+    def szhk_transaction(cls, start: str = None, end: str = None,
+        fields: list = None) -> pd.DataFrame:
+        '''Get north money buy data
+        ---------------------------
 
-    def lgt_overall_holdings_api(date: 'datetime.datetime | datetime.date | str') -> pd.DataFrame:
-        date = time2str(date)
-        sql = f'select * from lgt_holdings_api ' + \
-            f'where trade_date = "{date}"'
-        data = pd.read_sql(sql, stock)
+        start: str, start date
+        end: str, end date
+        '''
+        data = cls._get_panel_data(
+            start = start,
+            end = end,
+            date_col = 'trade_date',
+            code = None,
+            code_col = None,
+            fields = fields,
+            table = 'szhk_transaction',
+            database = cls.stock,
+            index = ['trade_date']
+        )
         return data
 
-    def lgt_overall_holdings_em(date: 'datetime.datetime | datetime.date | str') -> pd.DataFrame:
-        date = time2str(date)
-        sql = f'select * from lgt_holdings_em ' + \
-            f'where trade_date = "{date}"'
-        data = pd.read_sql(sql, stock)
+    @classmethod
+    def lgt_holdings_api(cls, start: str = None, end: str = None,
+        code: 'str | list' = None, fields: list = None) -> pd.DataFrame:
+        '''Get lugutong holdings data from api
+        -----------------------------
+
+        start: str, start time,
+        end: str, end time,
+        code: str, stock code,
+        fields: list, fields to be selected
+        '''
+        data = cls._get_panel_data(
+            start = start,
+            end = end,
+            date_col = 'trade_date',
+            code = code,
+            code_col = 'wind_code',
+            fields = fields,
+            table = 'lgt_holdings_api',
+            database = cls.stock,
+            index = ['trade_date', 'wind_code']
+        )
         return data
 
-    def lgt_institution_holdings(date: 'datetime.datetime | datetime.date | str',
-                        inst_name: str,
-                        ) -> pd.DataFrame:
-        date = time2str(date)
-        sql = f'select * from oversea_institution_holding ' + \
-            f'where hold_date = "{date}" ' + \
-            f'and org_name = "{inst_name}"'
-        data = pd.read_sql(sql, stock)
+    @classmethod
+    def lgt_holdings_em(cls, start: str = None, end: str = None, 
+        code: 'list | str' = None, fields: list = None) -> pd.DataFrame:
+        '''Get lugutong holdings data from em
+        -----------------------------
+
+        start: str, start time,
+        end: str, end time,
+        code: str, stock code,
+        fields: list, fields to be selected
+        '''
+        data = cls._get_panel_data(
+            start = start,
+            end = end,
+            date_col = 'trade_date',
+            code = code,
+            code_col = 'wind_code',
+            fields = fields,
+            table = 'lgt_holdings_em',
+            database = cls.stock,
+            index = ['trade_date', 'security_code']
+        )
         return data
 
-    def dividend(date: 'datetime.datetime | datetime.date | str') -> pd.DataFrame:
-        date = time2str(date)
-        sql = f'select * ' + \
-            f'from dividend ' + \
-            f'where trade_date = "{date}"' 
-        data = pd.read_sql(sql, stock)
+    @classmethod
+    def oversea_institution_holding(cls, start: str = None, end: str = None,
+        code: 'str | list' = None, fields: list = None) -> pd.DataFrame:
+        data = cls._get_panel_data(
+            start = start,
+            end = end,
+            date_col = 'hold_date',
+            code = code,
+            code_col = 'wind_code',
+            fields = fields,
+            table = 'oversea_institution_holding',
+            database = cls.stock,
+            index = ['hold_date', 'secucode']
+        )
+        return data
+
+    @classmethod
+    def dividend(cls, start: str = None, end = None, 
+        code: 'str | list' = None, fields: list = None) -> pd.DataFrame:
+        data = cls._get_panel_data(
+            start = start,
+            end = end,
+            date_col = 'trade_date',
+            code = code,
+            code_col = 'code',
+            fields = fields,
+            table = 'dividend',
+            database = cls.stock,
+            index = ['trade_date', 'code']
+        )
         return data 
 
 class StockUS():
@@ -536,5 +544,5 @@ if __name__ == '__main__':
     # print(price)
     
     database = Database('kali', 'kali123')
-    data = database.market_daily(code=['000001.SZ', '000002.SZ'], start='20210101', end='20211231')
+    data = database.market_daily(code=('000001.SZ', '000002.SZ'), start='20210101', end='20211231')
     print(data)
