@@ -13,49 +13,63 @@ class Worker(object):
     TIMESERIES = 2
     PANEL = 3
     
-    def __init__(self, dataframe: pd.DataFrame):
-        self.type_ = self._validate(dataframe)
-        self.dataframe = dataframe
+    def __init__(self, data: pd.DataFrame):
+        self.type_ = self._validate(data)
+        self.data = data
 
-    def _validate(self, dataframe: pd.DataFrame):
-        if not isinstance(dataframe, pd.DataFrame):
-            raise TypeError('Dataframe must be a DataFrame')
+    def _validate(self, data: 'pd.DataFrame | pd.Series'):
+        if not isinstance(data, (pd.DataFrame, pd.Series)):
+            raise TypeError('Your data must be a DataFrame or a Series')
 
-        if dataframe.empty:
-            raise ValueError('Dataframe is empty')
+        if data.empty:
+            raise ValueError('Dataframe or Series is empty')
 
-        if isinstance(dataframe.index, pd.MultiIndex):
-            if isinstance(dataframe.index.levels[0], pd.DatetimeIndex) and len(dataframe.index.levshape) == 2:
+        if isinstance(data.index, pd.MultiIndex):
+            if isinstance(data.index.levels[0], pd.DatetimeIndex) and len(data.index.levshape) == 2:
                 return Worker.PANEL
             
             else:
                 raise TypeError('A panel index must be 2 level index with DatetimeIndex as level 0')
         
         else:
-            if not isinstance(dataframe.index, pd.DatetimeIndex):
+            if not isinstance(data.index, pd.DatetimeIndex):
                 return Worker.CROSSSECTION
             else:
                 return Worker.TIMESERIES
 
     def _indexer(self, datetime, asset, indicator):
-        if self.type_ == Worker.CROSSSECTION:
-            return self.dataframe.loc[(asset, indicator)].copy()
+        data = self.data.copy()
 
-        elif self.type_ == Worker.TIMESERIES:
-            return self.dataframe.loc[(datetime, indicator)].copy()
-            
-        elif self.type_ == Worker.PANEL:
-            if isinstance(datetime, str):
-                # 当datetime为str同时asset与indicator也为str返回为数字，导致后续droplevel报错；
-                # 同时无法保证asset与indicator类型返回数据不一定是双索引的，可能导致droplevel报错
-                return self.dataframe.loc[(datetime, asset), indicator].droplevel(0).copy()
+        if isinstance(data, pd.Series):
+            if self.type_ == Worker.CROSSSECTION:
+                return data.loc[asset]
+            elif self.type_ == Worker.TIMESERIES:
+                return data.loc[datetime]
             else:
-                if isinstance(asset, str):
-                    # asset与indicator类型不确定时返回值可能没有droplevel方法
-                    return self.dataframe.loc[(datetime, asset), indicator].droplevel(1).copy()
-                if isinstance(indicator, str):
-                    return self.dataframe.loc[(datetime, asset), indicator].unstack(level=1).copy()
-                return self.dataframe.loc[(datetime, asset), indicator].copy()
+                # 这里可能也需要做配套的修改
+                if isinstance(datetime, str):
+                    return data.loc[(datetime, asset)].droplevel(0)
+                return data.loc[(datetime, asset)].unstack()
+            
+        else:
+            if self.type_ == Worker.CROSSSECTION and isinstance(datetime, str):
+                return self.dataframe.loc[(asset, indicator)]
+
+            elif self.type_ == Worker.TIMESERIES:
+                return self.dataframe.loc[(datetime, indicator)]
+                
+            elif self.type_ == Worker.PANEL:
+                if isinstance(datetime, str):
+                    # 当datetime为str同时asset与indicator也为str返回为数字，导致后续droplevel报错；
+                    # 同时无法保证asset与indicator类型返回数据不一定是双索引的，可能导致droplevel报错
+                    return self.dataframe.loc[(datetime, asset), indicator].droplevel(0)
+                else:
+                    if isinstance(asset, str):
+                        # asset与indicator类型不确定时返回值可能没有droplevel方法
+                        return self.dataframe.loc[(datetime, asset), indicator].droplevel(1)
+                    if isinstance(indicator, str):
+                        return self.dataframe.loc[(datetime, asset), indicator].unstack(level=1)
+                    return self.dataframe.loc[(datetime, asset), indicator]
 
 class Request(object):
 
