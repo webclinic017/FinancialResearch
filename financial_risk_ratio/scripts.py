@@ -78,8 +78,8 @@ def calculate_unit(data):
     std = data.std(axis=0)
     data_normalized = (data - mean) / std
     score = pd.DataFrame(norm.sf(data_normalized) - 0.5, index=data.index, columns=data.columns)
-    score = score.abs().mean().mean()
-    score = pd.DataFrame([score], index=[data.index.get_level_values(0)[-1]], columns=['score'])
+    score = score.abs().mean()
+    score = pd.DataFrame([score], index=[data.index.get_level_values(0)[-1]], columns=data.columns)
     return score
     
 result = indicators.calculator.rolling(window=4, grouper=stock_status.group, func=calculate_unit)
@@ -87,7 +87,7 @@ result = indicators.calculator.rolling(window=4, grouper=stock_status.group, fun
 # --- 读取行业名称与行业代码对应表
 names = pd.read_excel('assets/data/industry/citics_name.xlsx', index_col="行业代码").loc[:, "行业简称"].to_dict()
 price = pd.read_csv('assets/data/industry/citics_close.csv', index_col=0, parse_dates=True)
-price = price.rename(columns=names)
+price = price.rename(columns=names).drop(['CI005030.WI', 'CI005029.WI'], axis=1)
 
 # --- 统一行业指标结果与价格数据的频率
 ret = price.preprocessor.price2fwd('q').loc[daterange]
@@ -97,6 +97,15 @@ with pd.Gallery(len(ret.columns[:-2]), 1, path='test.png') as (_, axes):
     for i, col in enumerate(ret.columns[:-2]):
         ax = axes[i, 0]
         result.drawer.draw(kind='line', indicator='score', asset=col, 
-            ax=ax, legend=True, label='indicator')
+            ax=ax, legend=True, label='indicator', color='red')
         ret[[col]].drawer.draw(kind='bar', ax=ax.twinx(), legend=True,
-            label='3m forward return', title=col)
+            label='3m forward return', title=col, color='green')
+
+# --- 计算一下IC
+result_ = pd.concat([result, ret.stack()], axis=1)
+result_.columns = ['score', 'ret']
+ic = result_.describer.corr().loc[(slice(None), "score"), "ret"].droplevel(1)
+
+
+# ---
+ttm = pd.Filer.read_csv_directory('assets/data/financial_report/ttm/', perspective='datetime', usecols=range(1, 20), index_col=[0,1], parse_dates=True)
