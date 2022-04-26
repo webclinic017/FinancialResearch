@@ -18,7 +18,7 @@ class Worker(object):
     
     def __init__(self, data: 'pd.DataFrame | pd.Series'):
         self.data = data
-        self.type_ = self._validate()
+        self._validate()
 
     def _validate(self):
 
@@ -27,24 +27,28 @@ class Worker(object):
 
         is_ts = not isinstance(self.data.index, pd.MultiIndex) and isinstance(self.data.index, pd.DatetimeIndex)
         is_cs = not isinstance(self.data.index, pd.MultiIndex) and not isinstance(self.data.index, pd.DatetimeIndex)
-        is_panel = isinstance(self.data.index, pd.MultiIndex) and self.data.index.levshape == 2 \
+        is_panel = isinstance(self.data.index, pd.MultiIndex) and len(self.data.index.levshape) == 2 \
                 and isinstance(self.data.index.levels[0], pd.DatetimeIndex) and not isinstance(self.data.index.levels[1], pd.DatetimeIndex)
         
         if isinstance(self.data, pd.Series):
             if is_ts:
-                return Worker.SERIES_TIMESERIES
+                self.type_ = Worker.SERIES_TIMESERIES
             if is_cs:
-                return Worker.SERIES_CROSSSECTION
+                self.type_ = Worker.SERIES_CROSSSECTION
             if is_panel:
-                return Worker.SERIES_PANEL
+                self.type_ = Worker.SERIES_PANEL
+            else:
+                raise ValueError("Your dataframe or series seems not supported in our framework")
 
         elif isinstance(self.data, pd.DataFrame):
             if is_ts:
-                return Worker.FRAME_TIMESERIES
+                self.type_ = Worker.FRAME_TIMESERIES
             if is_cs:
-                return Worker.FRAME_CROSSSECTION
+                self.type_ = Worker.FRAME_CROSSSECTION
             if is_panel:
-                return Worker.FRAME_PANEL           
+                self.type_ = Worker.FRAME_PANEL           
+            else:
+                raise ValueError("Your dataframe or series seems not supported in our framework")
             
     def _indexer(self, datetime, asset, indicator):
         data = self.data.copy()
