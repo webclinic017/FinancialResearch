@@ -9,67 +9,78 @@ from bs4 import BeautifulSoup
 
 
 class Worker(object):
-    CROSSSECTION = 1
-    TIMESERIES = 2
-    PANEL = 3
+    SERIES_TIMESERIES = 1
+    SERIES_CROSSSECTION = 2
+    SERIES_PANEL = 3
+    FRAME_TIMESERIES = 4
+    FRAME_CROSSSECTION = 5
+    FRAME_PANEL = 6
     
-    def __init__(self, data: pd.DataFrame):
-        self.type_ = self._validate(data)
+    def __init__(self, data: 'pd.DataFrame | pd.Series'):
         self.data = data
+        self.type_ = self._validate()
 
-    def _validate(self, data: 'pd.DataFrame | pd.Series'):
-        if not isinstance(data, (pd.DataFrame, pd.Series)):
-            raise TypeError('Your data must be a DataFrame or a Series')
+    def _validate(self):
 
-        if data.empty:
+        if self.data.empty:
             raise ValueError('Dataframe or Series is empty')
 
-        if isinstance(data.index, pd.MultiIndex):
-            if isinstance(data.index.levels[0], pd.DatetimeIndex) and len(data.index.levshape) == 2:
-                return Worker.PANEL
-            
-            else:
-                raise TypeError('A panel index must be 2 level index with DatetimeIndex as level 0')
+        is_ts = not isinstance(self.data.index, pd.MultiIndex) and isinstance(self.data.index, pd.DatetimeIndex)
+        is_cs = not isinstance(self.data.index, pd.MultiIndex) and not isinstance(self.data.index, pd.DatetimeIndex)
+        is_panel = isinstance(self.data.index, pd.MultiIndex) and self.data.index.levshape == 2 \
+                and isinstance(self.data.index.levels[0], pd.DatetimeIndex) and not isinstance(self.data.index.levels[1], pd.DatetimeIndex)
         
-        else:
-            if not isinstance(data.index, pd.DatetimeIndex):
-                return Worker.CROSSSECTION
-            else:
-                return Worker.TIMESERIES
+        if isinstance(self.data, pd.Series):
+            if is_ts:
+                return Worker.SERIES_TIMESERIES
+            if is_cs:
+                return Worker.SERIES_CROSSSECTION
+            if is_panel:
+                return Worker.SERIES_PANEL
 
+        elif isinstance(self.data, pd.DataFrame):
+            if is_ts:
+                return Worker.FRAME_TIMESERIES
+            if is_cs:
+                return Worker.FRAME_CROSSSECTION
+            if is_panel:
+                return Worker.FRAME_PANEL           
+            
     def _indexer(self, datetime, asset, indicator):
         data = self.data.copy()
 
-        if isinstance(data, pd.Series):
-            if self.type_ == Worker.CROSSSECTION:
-                return data.loc[asset]
-            elif self.type_ == Worker.TIMESERIES:
-                return data.loc[datetime]
-            else:
-                # 这里可能也需要做配套的修改
-                if isinstance(datetime, str):
-                    return data.loc[(datetime, asset)].droplevel(0)
-                return data.loc[(datetime, asset)].unstack()
-            
-        else:
-            if self.type_ == Worker.CROSSSECTION and isinstance(datetime, str):
-                return self.dataframe.loc[(asset, indicator)]
+        # if series, meaning there is only one indicato
+        if self.type_ == Worker.SERIES_TIMESERIES:
+            return data.loc[datetime]
+        
+        elif self.type_ == Worker.SERIES_CROSSSECTION:
+            return data.loc[asset]
+        
+        elif self.type_ == Worker.SERIES_PANEL:
+            if isinstance(datetime, str):
+                return data.loc[(datetime, asset)].droplevel(0)
+            if isinstance(asset, str):
+                return data.loc[(datetime, asset)].droplevel(1)
+        
+        # if dataframe, meaning there are multiple indicatos
+        elif self.type_ == Worker.FRAME_TIMESERIES:
+            return data.loc[datetime, indicator]
+        
+        elif self.type_ == Worker.FRAME_CROSSSECTION:
+            return data.loc[asset, indicator]
 
-            elif self.type_ == Worker.TIMESERIES:
-                return self.dataframe.loc[(datetime, indicator)]
-                
-            elif self.type_ == Worker.PANEL:
-                if isinstance(datetime, str):
-                    # 当datetime为str同时asset与indicator也为str返回为数字，导致后续droplevel报错；
-                    # 同时无法保证asset与indicator类型返回数据不一定是双索引的，可能导致droplevel报错
-                    return self.dataframe.loc[(datetime, asset), indicator].droplevel(0)
-                else:
-                    if isinstance(asset, str):
-                        # asset与indicator类型不确定时返回值可能没有droplevel方法
-                        return self.dataframe.loc[(datetime, asset), indicator].droplevel(1)
-                    if isinstance(indicator, str):
-                        return self.dataframe.loc[(datetime, asset), indicator].unstack(level=1)
-                    return self.dataframe.loc[(datetime, asset), indicator]
+        elif self.type_ == Worker.FRAME_PANEL:
+            if isinstance(datetime, str) and not isinstance(asset, str):
+                return data.loc[(datetime, asset), indicator].droplevel(0)
+            elif isinstance(asset, str):
+                return data.loc[(datetime, asset), indicator].droplevel(1)
+            elif isinstance(datetime, str) and isinstance(asset, str):
+                res = data.loc[(datetime, asset), indicator]
+                res.name = res.name[0].strftime(r'%Y-%m-%d')
+            elif isinstance(indicator, str):
+                return data.loc[(datetime, asset), indicator].unstack(level=1)
+            else:
+                raise ValueError('Unsupported indexer')
 
 class Request(object):
 
