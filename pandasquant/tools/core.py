@@ -3,7 +3,6 @@ import time
 import random
 import requests
 import warnings
-import numpy as np
 import pandas as pd
 from lxml import etree
 from bs4 import BeautifulSoup
@@ -30,9 +29,9 @@ class Worker(object):
         
         if is_ts:
             self.type_ = Worker.TS
-        if is_cs:
+        elif is_cs:
             self.type_ = Worker.CS
-        if is_panel:
+        elif is_panel:
             self.type_ = Worker.PN
         else:
             raise ValueError("Your dataframe or series seems not supported in our framework")
