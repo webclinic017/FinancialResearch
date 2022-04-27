@@ -9,12 +9,9 @@ from bs4 import BeautifulSoup
 
 
 class Worker(object):
-    SERIES_TIMESERIES = 1
-    SERIES_CROSSSECTION = 2
-    SERIES_PANEL = 3
-    FRAME_TIMESERIES = 4
-    FRAME_CROSSSECTION = 5
-    FRAME_PANEL = 6
+    TS = 1
+    CS = 2
+    PN = 3
     
     def __init__(self, data: 'pd.DataFrame | pd.Series'):
         self.data = data
@@ -30,25 +27,15 @@ class Worker(object):
         is_panel = isinstance(self.data.index, pd.MultiIndex) and len(self.data.index.levshape) == 2 \
                 and isinstance(self.data.index.levels[0], pd.DatetimeIndex) and not isinstance(self.data.index.levels[1], pd.DatetimeIndex)
         
-        if isinstance(self.data, pd.Series):
-            if is_ts:
-                self.type_ = Worker.SERIES_TIMESERIES
-            if is_cs:
-                self.type_ = Worker.SERIES_CROSSSECTION
-            if is_panel:
-                self.type_ = Worker.SERIES_PANEL
-            else:
-                raise ValueError("Your dataframe or series seems not supported in our framework")
+        if is_ts:
+            self.type_ = Worker.TS
+        if is_cs:
+            self.type_ = Worker.CS
+        if is_panel:
+            self.type_ = Worker.PN
+        else:
+            raise ValueError("Your dataframe or series seems not supported in our framework")
 
-        elif isinstance(self.data, pd.DataFrame):
-            if is_ts:
-                self.type_ = Worker.FRAME_TIMESERIES
-            if is_cs:
-                self.type_ = Worker.FRAME_CROSSSECTION
-            if is_panel:
-                self.type_ = Worker.FRAME_PANEL           
-            else:
-                raise ValueError("Your dataframe or series seems not supported in our framework")
             
     def _indexer(self, datetime, asset, indicator):
         data = self.data.copy()
