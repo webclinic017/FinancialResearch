@@ -1,0 +1,3 @@
+[submodule "pandasquant"]
+	path = pandasquant
+	url = git@github.com:ppoak/pandasquant.git
