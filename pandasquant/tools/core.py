@@ -37,7 +37,7 @@ class Worker(object):
             raise ValueError("Your dataframe or series seems not supported in our framework")
 
             
-    def _indexer(self, datetime, asset, indicator):
+    def _flat(self, datetime, asset, indicator):
         data = self.data.copy()
 
         # if series, meaning there is only one indicato
