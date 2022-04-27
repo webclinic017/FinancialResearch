@@ -5,6 +5,14 @@ import matplotlib.ticker as mticker
 from ..tools import *
 
 
+class ArtistError(Exception):
+    def __init__(self, func: str, hint: str):
+        self.func = func
+        self.hint = hint
+    
+    def __str__(self) -> str:
+        return f"[-] <{self.func}> {self.hint}"
+
 class Gallery():
     '''Gallery is a context manager, so you can use it like this:
     
@@ -63,20 +71,37 @@ class Drawer(Worker):
         indicator: str, the slice of indicator, default to all indicators
         kwargs: dict, the kwargs for the plot function
         '''
-        plotwised = self._indexer(datetime, asset, indicator)
-        if not isinstance(plotwised, (pd.Series, pd.DataFrame)):
-            raise ValueError('Your slice data seems not to be a plotable data')
+        if self.type_ == Worker.PN:
+            plotwised = self._flat(datetime, asset, indicator)
         
-        elif not isinstance(datetime, str):
+        else:
+            if not self.is_frame:
+                if self.type_ == Worker.TS:
+                    plotwised = self.data.copy().loc[datetime]
+                elif self.type_ == Worker.CS:
+                    plotwised = self.data.copy().loc[asset]
+            else:
+                if self.type == Worker.TS:
+                    plotwised = self.data.copy().loc[(datetime, indicator)]
+                elif self.type_ == Worker.CS:
+                    plotwised = self.data.copy().loc[(asset, indicator)]
+        
+        if not isinstance(plotwised, (pd.Series, pd.DataFrame)):
+            raise ArtistError('draw', 'Your slice data seems not to be a plotable data')
+        
+        if isinstance(plotwised.index, pd.DatetimeIndex):
             plotwised.index = plotwised.index.strftime(r'%Y-%m-%d')
 
         plotwised.plot(kind=kind, **kwargs)
 
 
 if __name__ == "__main__":
-    data = pd.DataFrame(np.random.rand(100,2), index=pd.date_range('20200101', periods=100), columns=list('ab'))
-    with Gallery(1, 2) as (_, axes):
-        data.drawer.draw('line', indicator='a', color='red', ax=axes[0,0])
-        data.drawer.draw('bar', indicator='a', color='green', ax=axes[0, 0].twinx())
-        data.drawer.draw('line', indicator='b', color='blue', ax=axes[0, 1])
+    tsseries = pd.Series(np.random.rand(100), index=pd.date_range('20200101', periods=100), name='id8')
+    panelframe = pd.DataFrame(np.random.rand(500, 5), index=pd.MultiIndex.from_product(
+        [pd.date_range('20100101', periods=100), list('abcde')]
+    ), columns=['id1', 'id2', 'id3', 'id4', 'id5'])
+    with Gallery(1, 2, path='test.png') as (_, axes):
+        panelframe['id1'].drawer.draw('line', asset='a', color='red', ax=axes[0, 0])
+        tsseries.drawer.draw('line', ax=axes[0, 0].twinx())
+        panelframe.drawer.draw('bar', asset='c', ax=axes[0, 1], stacked=True)
     

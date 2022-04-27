@@ -19,6 +19,7 @@ class Worker(object):
 
     def _validate(self):
 
+        self.is_frame = True if isinstance(self.data, pd.DataFrame) else False
         if self.data.empty:
             raise ValueError('Dataframe or Series is empty')
 
@@ -37,14 +38,15 @@ class Worker(object):
             raise ValueError("Your dataframe or series seems not supported in our framework")
  
     def _flat(self, datetime, asset, indicator):
+        
         data = self.data.copy()
+        
         check = (isinstance(datetime, str), isinstance(asset, str), isinstance(indicator, str))
         if check == (False, False, False):
             raise ValueError('Must assign at least one of dimension')
-        if check == (True, True, True):
-            warnings.warn('Plotting may pointless')
+
               
-        if self.type_ == Worker.PN:
+        if self.is_frame:
             if check == (False, True, True):
                 return data.loc[(datetime, asset), indicator].droplevel(1)
             elif check == (True, False, True):
@@ -57,8 +59,19 @@ class Worker(object):
                 return data.loc[(datetime, asset), indicator].droplevel(1)
             elif check == (False, False, True):
                 return data.loc[(datetime, asset), indicator].unstack(level=1)
+            elif check == (True, True, True):
+                warnings.warn('single value was selected')
+                return data.loc[(datetime, asset), indicator]
         else:
-            raise ValueError('Unsupported indexer')
+            if check[-1]:
+                warnings.warn("Your data is not a dataframe, indicator will be ignored")
+            if check[0] and check[1]:
+                warnings.warn('single value was selected')
+                return data.loc[(datetime, asset)]
+            elif check[0]:
+                return data.loc[(datetime, asset)].droplevel(0)
+            elif check[1]:
+                return data.loc[(datetime, asset)]
 
 class Request(object):
 
@@ -208,6 +221,7 @@ class ProxyRequest(Request):
 
     def process(self):
         raise NotImplementedError
+
 
 if __name__ == "__main__":
     pass
