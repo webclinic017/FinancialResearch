@@ -4,6 +4,14 @@ import statsmodels.api as sm
 from ..tools import *
 
 
+class AnalystError(Exception):
+    def __init__(self, func: str, hint: str):
+        self.hint = hint
+        self.func = func
+    
+    def __str__(self):
+        return f"[-] <{self.func}> {self.hint}"
+
 @pd.api.extensions.register_dataframe_accessor("regressor")
 @pd.api.extensions.register_series_accessor("regressor")
 class Regressor(Worker):
@@ -12,10 +20,11 @@ class Regressor(Worker):
     and so on.
     '''
     
-    def ols(self, other: pd.Series = None):
+    def ols(self, other: pd.Series = None, x_col: str = None, y_col: str = None):
         '''OLS Regression Function
         ---------------------------
 
+        other: Series, assigned y value in a series form
         x_col: list, a list of column names used for regression x values
         y_col: str, the column name used for regression y values
         '''
@@ -29,17 +38,23 @@ class Regressor(Worker):
             res = pd.concat([coef, t], axis=1)
             res.columns = ['coef', 't']
             return res
-        
-        if self.type_ == Worker.SERIES_PANEL and other is not None:
-            reg_data = pd.merge(self.data, other, left_index=True, right_index=True)
-            return reg_data.groupby(level=0).apply(_reg)
-        elif self.type_ == Worker.SERIES_PANEL and other is None:
-            raise ValueError('Target Series is required')
-        elif self.type_ == Worker.FRAME_PANEL:
-            return reg_data.groupby(level=0).apply(_reg)
-        else:
-            return _reg(self.data)
 
+        param_status = (other is not None, x_col is not None, y_col is not None)
+
+        if param_status == (True, True, True):
+            raise AnalystError('ols', "You can assign either other or x_col and y_col, but not both.")
+        elif param_status == (True, False, False):
+            data = pd.merge(self.data, other, left_index=True, right_index=True)
+        elif param_status == (False, True, True):
+            data = self.data.loc[:, x_col + [y_col]]
+        else:
+            raise AnalystError('ols', "You need to assign x_col and y_col both.")
+
+        if self.type_ == Worker.PN:
+            return data.groupby(level=0).apply(_reg)
+        else:
+            return _reg(data)
+            
 @pd.api.extensions.register_dataframe_accessor("describer")
 @pd.api.extensions.register_series_accessor("describer")
 class Describer(Worker):
@@ -53,27 +68,25 @@ class Describer(Worker):
         -------------------------------------
 
         method: str, the method for calculating correlation function
-        tvalue: bool, whether to return t-value of a time-seriesed 
-            correlation coefficient
+        tvalue: bool, whether to return t-value of a time-seriesed correlation coefficient
         '''
-        if self.type_ in [Worker.FRAME_CROSSSECTION, Worker.FRAME_TIMESERIES]:
-            corr = self.data.corr(method=method)
-        elif self.type_ in [Worker.SERIES_CROSSSECTION, Worker.SERIES_TIMESERIES]:
-            corr = self.data.corr(other, method=method)
-        elif self.type_ == Worker.FRAME_PANEL:
-            corr = self.data.groupby(level=0).corr(method=method)
-        elif self.type_ == Worker.SERIES_PANEL:
-            corr = self.data.groupby(level=0).corr(other, method=method)
+        if other is not None:
+            data = pd.merge(self.data, other, left_index=True, right_index=True)
+        else:
+            data = self.data
 
-        if tvalue:
-            n = corr.index.levels[0].size
-            mean = corr.groupby(level=1).mean()
-            std = corr.groupby(level=1).std()
-            t = mean / std * np.sqrt(n)
-            t = t.loc[t.columns, t.columns].replace(np.inf, np.nan).replace(-np.inf, np.nan)
-            return t
-            
-        return corr
+        if self.type_ == Worker.PN:
+            corr = data.groupby(level=0).corr(method=method)
+            if tvalue:
+                n = corr.index.levels[0].size
+                mean = corr.groupby(level=1).mean()
+                std = corr.groupby(level=1).std()
+                t = mean / std * np.sqrt(n)
+                t = t.loc[t.columns, t.columns].replace(np.inf, np.nan).replace(-np.inf, np.nan)
+                return t
+            return corr
+        else:
+            return data.corr(method=method)
 
     def ic(self, other: pd.Series = None, method: str = 'spearman'):
         '''To calculate ic value
@@ -82,25 +95,36 @@ class Describer(Worker):
         other: series, the forward column
         method: str, 'spearman' means rank ic
         '''
-        if self.type_ == Worker.SERIES_CROSSSECTION:
-            ic = self.data.corr(other, method=method)
-        elif self.type_ == Worker.SERIES_PANEL:
-            ic = self.data.groupby(level=0).corr(other, method=method)
-        elif self.type_ == Worker.FRAME_CROSSSECTION:
-            ic_data = pd.merge(self.data, other, left_index=True, right_index=True)
-            ic = ic_data.corr(method=method)
-        elif self.type_ == Worker.FRAME_PANEL:
-            ic_data = pd.merge(self.data, other, left_index=True, right_index=True)
-            ic = ic_data.groupby(level=0).corr()
-            ic = ic_data.loc[(slice(None), ic.columns.difference(self.data.columns)), self.data.columns].droplevel(1)
+        if other is not None:
+            data = pd.merge(self.data, other, left_index=True, right_index=True)
         else:
-            ic = self.data.groupby(level=0).corr().loc[(slice(None), ret_col), :]
-            ic = ic.droplevel(1).drop(ret_col, axis=1)
+            data = self.data
+        
+        if self.type_ == Worker.PN:
+            ic = data.groupby(level=0).corr(method=method)
+            ic = ic.loc[(slice(None), ic.columns[-1]), ic.columns[:-1]].droplevel(1)
             return ic
+
+        elif self.type_ == Worker.CS:
+            ic = data.corr(method=method)
+            ic = ic.loc[ic.columns[:-1], ic.columns[-1]]
+            return ic
+        
+        else:
+            raise AnalystError('ic', 'Timeseries data cannot be used to calculate ic value!')
 
 
 if __name__ == "__main__":
-    data = pd.DataFrame(np.random.rand(500, 5), index=pd.MultiIndex.from_product(
+    panelframe = pd.DataFrame(np.random.rand(500, 5), index=pd.MultiIndex.from_product(
         [pd.date_range('20100101', periods=100), list('abcde')]
     ), columns=['id1', 'id2', 'id3', 'id4', 'id5'])
-    print(data.describer.corr(tvalue=True))
+    panelseries = pd.Series(np.random.rand(500), index=pd.MultiIndex.from_product(
+        [pd.date_range('20100101', periods=100), list('abcde')]
+    ), name='id1')
+    tsframe = pd.DataFrame(np.random.rand(500, 5), index=pd.date_range('20100101', periods=500),
+        columns=['id1', 'id2', 'id3', 'id4', 'id5'])
+    tsseries = pd.Series(np.random.rand(500), index=pd.date_range('20100101', periods=500), name='id1')
+    csframe = pd.DataFrame(np.random.rand(5, 5), index=list('abcde'), 
+        columns=['id1', 'id2', 'id3', 'id4', 'id5'])
+    csseries = pd.Series(np.random.rand(5), index=list('abcde'), name='id1')
+    print(csseries.describer.corr(csseries))
