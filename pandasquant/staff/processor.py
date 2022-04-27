@@ -4,11 +4,14 @@ import pandas as pd
 from ..tools import *
 
 
+class ProcessorError(FrameWorkError):
+    pass
+
 @pd.api.extensions.register_dataframe_accessor("preprocessor")
 class PreProcessor(Worker):
     
     def price2ret(self, period: str, open_column: str = 'close', close_column: str = 'close'):
-        if self.type_ == Worker.PANEL and isinstance(self.data, pd.DataFrame):
+        if self.type_ == Worker.PN and self.is_frame:
             # https://pandas.pydata.org/docs/reference/api/pandas.Grouper.html
             # https://stackoverflow.com/questions/15799162/
             close_price = self.data.groupby([
@@ -20,7 +23,7 @@ class PreProcessor(Worker):
                 pd.Grouper(level=1)
             ]).first().loc[:, open_column]
 
-        elif self.type_ == Worker.PANEL and isinstance(self.data, pd.Series):
+        elif self.type_ == Worker.PN and not self.is_frame:
             # if passing a series in panel form, assuming that
             # it is the only way to figure out a return
             close_price = self.data.groupby([
@@ -32,16 +35,19 @@ class PreProcessor(Worker):
                 pd.Grouper(level=1)
             ]).first()
 
-        elif self.type_ == Worker.TIMESERIES:
+        elif self.type_ == Worker.TS:
             close_price = self.data.\
                 resample(period, label='right').last()
             open_price = self.data.\
                 resample(period, label='right').first()
+            
+        else:
+            raise ProcessorError('price2ret', 'Can only convert time series data to return')
 
         return (close_price - open_price) / open_price
 
     def price2fwd(self, period: str, open_column: str = 'open', close_column: str = 'close'):
-        if self.type_ == Worker.PANEL:
+        if self.type_ == Worker.PN and self.is_frame:
             # https://pandas.pydata.org/docs/reference/api/pandas.Grouper.html
             # https://stackoverflow.com/questions/15799162/
             close_price = self.data.groupby([
@@ -53,7 +59,7 @@ class PreProcessor(Worker):
                 pd.Grouper(level=1)
             ]).first().loc[:, open_column]
 
-        elif self.type_ == Worker.PANEL and isinstance(self.data, pd.Series):
+        elif self.type_ == Worker.PN and not self.is_frame:
             # if passing a series in panel form, assuming that
             # it is the only way to figure out a return
             close_price = self.data.groupby([
@@ -65,11 +71,13 @@ class PreProcessor(Worker):
                 pd.Grouper(level=1)
             ]).first()
         
-        elif self.type_ == Worker.TIMESERIES:
+        elif self.type_ == Worker.TS:
             close_price = self.data.\
                 resample(period, label='left').last()
             open_price = self.data.\
                 resample(period, label='left').first()
+        else:
+            raise ProcessorError('price2fwd', 'Can only convert time series data to forward')
 
         return (close_price - open_price) / open_price
         
@@ -87,16 +95,19 @@ class PreProcessor(Worker):
             
         return diff
 
-    def dummy2category(self, dummy_columns, name: str = 'group'):
-        if isinstance(self.data, pd.Series):
-            raise TypeError('dummy2category can only be applied to a series')
+    def dummy2category(self, dummy_col: str = None, name: str = 'group'):
+        if not self.is_frame:
+            raise ProcessorError('dummy2category', 'Can only convert dataframe to category')
             
+        if dummy_col is None:
+            dummy_col = self.data.columns
+        
         columns = pd.DataFrame(
-            dummy_columns.values.reshape((1, -1))\
+            dummy_col.values.reshape((1, -1))\
             .repeat(self.data.shape[0], axis=0),
             index=self.data.index, columns=self.data.columns
         )
-        category = columns[self.data.loc[:, dummy_columns].astype('bool')]\
+        category = columns[self.data.loc[:, dummy_col].astype('bool')]\
             .replace(np.nan, '').astype('str').sum(axis=1)
         category.name = name
         return category
@@ -108,10 +119,11 @@ class PreProcessor(Worker):
         return np.log(self.data)
 
     def resample(self, rule: str, **kwargs):
-        if self.type_ == Worker.TIMESERIES:
+        if self.type_ == Worker.TS:
             return self.data.resample(rule, **kwargs)
-        elif self.type_ == Worker.PANEL:
+        elif self.type_ == Worker.PN:
             return self.data.groupby([pd.Grouper(level=0, freq=rule, **kwargs), pd.Grouper(level=1)])
+
 
 if __name__ == "__main__":
     import numpy as np

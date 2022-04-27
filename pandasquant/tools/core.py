@@ -8,6 +8,14 @@ from lxml import etree
 from bs4 import BeautifulSoup
 
 
+class FrameWorkError(Exception):
+    def __init__(self, func: str, hint: str) -> None:
+        self.func = func
+        self.hint = hint
+    
+    def __str__(self) -> str:
+        return f'[-] <{self.func}> {self.hint}'
+
 class Worker(object):
     TS = 1
     CS = 2

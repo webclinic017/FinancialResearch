@@ -5,13 +5,8 @@ import matplotlib.ticker as mticker
 from ..tools import *
 
 
-class ArtistError(Exception):
-    def __init__(self, func: str, hint: str):
-        self.func = func
-        self.hint = hint
-    
-    def __str__(self) -> str:
-        return f"[-] <{self.func}> {self.hint}"
+class ArtistError(FrameWorkError):
+    pass
 
 class Gallery():
     '''Gallery is a context manager, so you can use it like this:

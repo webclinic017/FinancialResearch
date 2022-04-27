@@ -12,12 +12,12 @@ from sqlalchemy import create_engine
 class Filer(Worker):
     
     def to_multisheet_excel(self, path, **kwargs):
-        if self.type_ == Worker.PANEL and isinstance(self.data, pd.DataFrame):
+        if self.type_ == Worker.PN and self.is_frame:
             with pd.ExcelWriter(path) as writer:
                 for column in self.dataframe.columns:
                     self.dataframe[column].unstack(level=1).to_excel(writer, sheet_name=str(column), **kwargs)
         
-        elif self.type_ == Worker.PANEL and isinstance(self.data, pd.Series):
+        elif self.type_ == Worker.PN and not self.is_frame:
             self.data.unstack().to_excel(path, **kwargs)
         
         else:

@@ -19,9 +19,9 @@ class Calculator(Worker):
         # in case of unsorted level
         data = self.data.sort_index().copy()
 
-        if self.type_ == Worker.TIMESERIES:
+        if self.type_ == Worker.TS:
             datetime_index = data.index
-        elif self.type_ == Worker.PANEL:
+        elif self.type_ == Worker.PN:
             datetime_index = data.index.levels[0]
         else:
             raise TypeError('rolling only support for panel or time series data')

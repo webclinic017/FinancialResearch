@@ -1,4 +1,5 @@
 from .core import (
+    FrameWorkError,
     Worker,
     Request,
     ProxyRequest
@@ -11,6 +12,7 @@ from .common import (
 
 
 __all__ = [
+    'FrameWorkError',
     'Worker',
     'Request',
     'ProxyRequest',

@@ -4,13 +4,8 @@ import statsmodels.api as sm
 from ..tools import *
 
 
-class AnalystError(Exception):
-    def __init__(self, func: str, hint: str):
-        self.hint = hint
-        self.func = func
-    
-    def __str__(self):
-        return f"[-] <{self.func}> {self.hint}"
+class AnalystError(FrameWorkError):
+    pass
 
 @pd.api.extensions.register_dataframe_accessor("regressor")
 @pd.api.extensions.register_series_accessor("regressor")
