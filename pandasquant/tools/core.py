@@ -2,6 +2,7 @@ import json
 import time
 import random
 import requests
+import warnings
 import numpy as np
 import pandas as pd
 from lxml import etree
@@ -35,43 +36,30 @@ class Worker(object):
             self.type_ = Worker.PN
         else:
             raise ValueError("Your dataframe or series seems not supported in our framework")
-
-            
+ 
     def _flat(self, datetime, asset, indicator):
         data = self.data.copy()
-
-        # if series, meaning there is only one indicato
-        if self.type_ == Worker.SERIES_TIMESERIES:
-            return data.loc[datetime]
-        
-        elif self.type_ == Worker.SERIES_CROSSSECTION:
-            return data.loc[asset]
-        
-        elif self.type_ == Worker.SERIES_PANEL:
-            if isinstance(datetime, str):
-                return data.loc[(datetime, asset)].droplevel(0)
-            if isinstance(asset, str):
-                return data.loc[(datetime, asset)].droplevel(1)
-        
-        # if dataframe, meaning there are multiple indicatos
-        elif self.type_ == Worker.FRAME_TIMESERIES:
-            return data.loc[datetime, indicator]
-        
-        elif self.type_ == Worker.FRAME_CROSSSECTION:
-            return data.loc[asset, indicator]
-
-        elif self.type_ == Worker.FRAME_PANEL:
-            if isinstance(datetime, str) and not isinstance(asset, str):
-                return data.loc[(datetime, asset), indicator].droplevel(0)
-            elif isinstance(asset, str):
+        check = (isinstance(datetime, str), isinstance(asset, str), isinstance(indicator, str))
+        if check == (False, False, False):
+            raise ValueError('Must assign at least one of dimension')
+        if check == (True, True, True):
+            warnings.warn('Plotting may pointless')
+              
+        if self.type_ == Worker.PN:
+            if check == (False, True, True):
                 return data.loc[(datetime, asset), indicator].droplevel(1)
-            elif isinstance(datetime, str) and isinstance(asset, str):
-                res = data.loc[(datetime, asset), indicator]
-                res.name = res.name[0].strftime(r'%Y-%m-%d')
-            elif isinstance(indicator, str):
+            elif check == (True, False, True):
+                return data.loc[(datetime, asset), indicator].droplevel(0)
+            elif check == (True, True, False):
+                return data.loc[(datetime, asset), indicator]
+            elif check == (True, False, False):
+                return data.loc[(datetime, asset), indicator].droplevel(0)
+            elif check == (False, True, False):
+                return data.loc[(datetime, asset), indicator].droplevel(1)
+            elif check == (False, False, True):
                 return data.loc[(datetime, asset), indicator].unstack(level=1)
-            else:
-                raise ValueError('Unsupported indexer')
+        else:
+            raise ValueError('Unsupported indexer')
 
 class Request(object):
 
