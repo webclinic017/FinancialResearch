@@ -4,3 +4,4 @@ akshare
 matplotlib
 statsmodels
 ipykernel
+pymysql
