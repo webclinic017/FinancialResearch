@@ -46,16 +46,16 @@
 			"module": "pandasquant.__init__"
 		},
 		{
+			"name": "pandasquant/tools/common",
+			"type": "python",
+			"request": "launch",
+			"module": "pandasquant.tools.common"
+		},
+		{
 			"name": "pandasquant/tools/core",
 			"type": "python",
 			"request": "launch",
 			"module": "pandasquant.tools.core"
-		},
-		{
-			"name": "pandasquant/tools/converter",
-			"type": "python",
-			"request": "launch",
-			"module": "pandasquant.tools.converter"
 		},
 		{
 			"name": "pandasquant/tools/__init__",
@@ -82,6 +82,12 @@
 			"module": "pandasquant.staff.analyst"
 		},
 		{
+			"name": "pandasquant/staff/backtester",
+			"type": "python",
+			"request": "launch",
+			"module": "pandasquant.staff.backtester"
+		},
+		{
 			"name": "pandasquant/staff/artist",
 			"type": "python",
 			"request": "launch",
@@ -98,6 +104,12 @@
 			"type": "python",
 			"request": "launch",
 			"module": "pandasquant.staff.__init__"
+		},
+		{
+			"name": "pandasquant/.vscode/settings",
+			"type": "python",
+			"request": "launch",
+			"module": "pandasquant..vscode.settings"
 		},
 		{
 			"name": "utils/common",
@@ -154,6 +166,18 @@
 			"module": "absorb_ratio.test"
 		},
 		{
+			"name": "financial_risk_ratio/get_data",
+			"type": "python",
+			"request": "launch",
+			"module": "financial_risk_ratio.get_data"
+		},
+		{
+			"name": "financial_risk_ratio/scripts",
+			"type": "python",
+			"request": "launch",
+			"module": "financial_risk_ratio.scripts"
+		},
+		{
 			"name": "industrial_momentum_and_reverse/matprocessor",
 			"type": "python",
 			"request": "launch",
@@ -176,18 +200,6 @@
 			"type": "python",
 			"request": "launch",
 			"module": "other.amount_concentration.validate"
-		},
-		{
-			"name": "other/financial_ratio/scripts",
-			"type": "python",
-			"request": "launch",
-			"module": "other.financial_ratio.scripts"
-		},
-		{
-			"name": "other/financial_ratio/test",
-			"type": "python",
-			"request": "launch",
-			"module": "other.financial_ratio.test"
 		}
 	]
 }
