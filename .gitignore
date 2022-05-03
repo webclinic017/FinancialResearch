@@ -166,3 +166,5 @@ logs/
 assets/data/*
 !assets/data/README.md
 **/data
+*data*
+**/*data*
