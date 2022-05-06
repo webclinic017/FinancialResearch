@@ -1,3 +1,6 @@
 [submodule "pandasquant"]
 	path = pandasquant
 	url = git@github.com:ppoak/pandasquant.git
+[submodule "database"]
+	path = database
+	url = git@github.com:ppoak/database

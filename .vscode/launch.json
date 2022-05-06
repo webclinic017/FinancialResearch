@@ -10,196 +10,88 @@
 			"justMyCode": true
 		},
 		{
-			"name": "factor/tools/prepare",
+			"name": "database/save",
 			"type": "python",
 			"request": "launch",
-			"module": "factor.tools.prepare"
+			"module": "database.save"
 		},
 		{
-			"name": "factor/define/size",
+			"name": "database/run",
 			"type": "python",
 			"request": "launch",
-			"module": "factor.define.size"
+			"module": "database.run"
 		},
 		{
-			"name": "factor/define/technical",
+			"name": "database/config",
 			"type": "python",
 			"request": "launch",
-			"module": "factor.define.technical"
+			"module": "database.config"
 		},
 		{
-			"name": "factor/define/base",
+			"name": "database/config_",
 			"type": "python",
 			"request": "launch",
-			"module": "factor.define.base"
+			"module": "database.config_"
 		},
 		{
-			"name": "factor/define/__init__",
+			"name": "database/utils/key",
 			"type": "python",
 			"request": "launch",
-			"module": "factor.define.__init__"
+			"module": "database.utils.key"
 		},
 		{
-			"name": "pandasquant/__init__",
+			"name": "database/utils/io",
 			"type": "python",
 			"request": "launch",
-			"module": "pandasquant.__init__"
+			"module": "database.utils.io"
 		},
 		{
-			"name": "pandasquant/tools/common",
+			"name": "database/utils/demjson",
 			"type": "python",
 			"request": "launch",
-			"module": "pandasquant.tools.common"
+			"module": "database.utils.demjson"
 		},
 		{
-			"name": "pandasquant/tools/core",
+			"name": "database/.vscode/settings",
 			"type": "python",
 			"request": "launch",
-			"module": "pandasquant.tools.core"
+			"module": "database..vscode.settings"
 		},
 		{
-			"name": "pandasquant/tools/__init__",
+			"name": "database/data/local",
 			"type": "python",
 			"request": "launch",
-			"module": "pandasquant.tools.__init__"
+			"module": "database.data.local"
 		},
 		{
-			"name": "pandasquant/staff/fetcher",
+			"name": "database/data/wind",
 			"type": "python",
 			"request": "launch",
-			"module": "pandasquant.staff.fetcher"
+			"module": "database.data.wind"
 		},
 		{
-			"name": "pandasquant/staff/processor",
+			"name": "database/data/api",
 			"type": "python",
 			"request": "launch",
-			"module": "pandasquant.staff.processor"
+			"module": "database.data.api"
 		},
 		{
-			"name": "pandasquant/staff/analyst",
+			"name": "database/data/crawler",
 			"type": "python",
 			"request": "launch",
-			"module": "pandasquant.staff.analyst"
+			"module": "database.data.crawler"
 		},
 		{
-			"name": "pandasquant/staff/backtester",
+			"name": "SwQuandrant/run",
 			"type": "python",
 			"request": "launch",
-			"module": "pandasquant.staff.backtester"
+			"module": "SwQuandrant.run"
 		},
 		{
-			"name": "pandasquant/staff/artist",
+			"name": "FinancialRiskRatio/scripts",
 			"type": "python",
 			"request": "launch",
-			"module": "pandasquant.staff.artist"
-		},
-		{
-			"name": "pandasquant/staff/calculator",
-			"type": "python",
-			"request": "launch",
-			"module": "pandasquant.staff.calculator"
-		},
-		{
-			"name": "pandasquant/staff/__init__",
-			"type": "python",
-			"request": "launch",
-			"module": "pandasquant.staff.__init__"
-		},
-		{
-			"name": "pandasquant/.vscode/settings",
-			"type": "python",
-			"request": "launch",
-			"module": "pandasquant..vscode.settings"
-		},
-		{
-			"name": "utils/common",
-			"type": "python",
-			"request": "launch",
-			"module": "utils.common"
-		},
-		{
-			"name": "utils/database",
-			"type": "python",
-			"request": "launch",
-			"module": "utils.database"
-		},
-		{
-			"name": "utils/getdata",
-			"type": "python",
-			"request": "launch",
-			"module": "utils.getdata"
-		},
-		{
-			"name": "utils/io",
-			"type": "python",
-			"request": "launch",
-			"module": "utils.io"
-		},
-		{
-			"name": "utils/__init__",
-			"type": "python",
-			"request": "launch",
-			"module": "utils.__init__"
-		},
-		{
-			"name": "result/rolling_window",
-			"type": "python",
-			"request": "launch",
-			"module": "result.rolling_window"
-		},
-		{
-			"name": "sw_quadrant/run",
-			"type": "python",
-			"request": "launch",
-			"module": "sw_quadrant.run"
-		},
-		{
-			"name": "absorb_ratio/compcontrib",
-			"type": "python",
-			"request": "launch",
-			"module": "absorb_ratio.compcontrib"
-		},
-		{
-			"name": "absorb_ratio/ar",
-			"type": "python",
-			"request": "launch",
-			"module": "absorb_ratio.ar"
-		},
-		{
-			"name": "absorb_ratio/test",
-			"type": "python",
-			"request": "launch",
-			"module": "absorb_ratio.test"
-		},
-		{
-			"name": "financial_risk_ratio/research",
-			"type": "python",
-			"request": "launch",
-			"module": "financial_risk_ratio.research"
-		},
-		{
-			"name": "financial_risk_ratio/data",
-			"type": "python",
-			"request": "launch",
-			"module": "financial_risk_ratio.data"
-		},
-		{
-			"name": "financial_risk_ratio/scripts",
-			"type": "python",
-			"request": "launch",
-			"module": "financial_risk_ratio.scripts"
-		},
-		{
-			"name": "industrial_momentum_and_reverse/matprocessor",
-			"type": "python",
-			"request": "launch",
-			"module": "industrial_momentum_and_reverse.matprocessor"
-		},
-		{
-			"name": "industrial_momentum_and_reverse/run",
-			"type": "python",
-			"request": "launch",
-			"module": "industrial_momentum_and_reverse.run"
+			"module": "FinancialRiskRatio.scripts"
 		},
 		{
 			"name": "other/amount_concentration/calculate",
@@ -212,6 +104,138 @@
 			"type": "python",
 			"request": "launch",
 			"module": "other.amount_concentration.validate"
+		},
+		{
+			"name": "Factor/tools/prepare",
+			"type": "python",
+			"request": "launch",
+			"module": "Factor.tools.prepare"
+		},
+		{
+			"name": "Factor/define/technical",
+			"type": "python",
+			"request": "launch",
+			"module": "Factor.define.technical"
+		},
+		{
+			"name": "Factor/define/__init__",
+			"type": "python",
+			"request": "launch",
+			"module": "Factor.define.__init__"
+		},
+		{
+			"name": "Factor/define/size",
+			"type": "python",
+			"request": "launch",
+			"module": "Factor.define.size"
+		},
+		{
+			"name": "Factor/define/base",
+			"type": "python",
+			"request": "launch",
+			"module": "Factor.define.base"
+		},
+		{
+			"name": "pandasquant/__init__",
+			"type": "python",
+			"request": "launch",
+			"module": "pandasquant.__init__"
+		},
+		{
+			"name": "pandasquant/tools/__init__",
+			"type": "python",
+			"request": "launch",
+			"module": "pandasquant.tools.__init__"
+		},
+		{
+			"name": "pandasquant/tools/core",
+			"type": "python",
+			"request": "launch",
+			"module": "pandasquant.tools.core"
+		},
+		{
+			"name": "pandasquant/tools/common",
+			"type": "python",
+			"request": "launch",
+			"module": "pandasquant.tools.common"
+		},
+		{
+			"name": "pandasquant/staff/__init__",
+			"type": "python",
+			"request": "launch",
+			"module": "pandasquant.staff.__init__"
+		},
+		{
+			"name": "pandasquant/staff/processor",
+			"type": "python",
+			"request": "launch",
+			"module": "pandasquant.staff.processor"
+		},
+		{
+			"name": "pandasquant/staff/artist",
+			"type": "python",
+			"request": "launch",
+			"module": "pandasquant.staff.artist"
+		},
+		{
+			"name": "pandasquant/staff/analyst",
+			"type": "python",
+			"request": "launch",
+			"module": "pandasquant.staff.analyst"
+		},
+		{
+			"name": "pandasquant/staff/calculator",
+			"type": "python",
+			"request": "launch",
+			"module": "pandasquant.staff.calculator"
+		},
+		{
+			"name": "pandasquant/staff/backtester",
+			"type": "python",
+			"request": "launch",
+			"module": "pandasquant.staff.backtester"
+		},
+		{
+			"name": "pandasquant/staff/fetcher",
+			"type": "python",
+			"request": "launch",
+			"module": "pandasquant.staff.fetcher"
+		},
+		{
+			"name": "pandasquant/.vscode/settings",
+			"type": "python",
+			"request": "launch",
+			"module": "pandasquant..vscode.settings"
+		},
+		{
+			"name": "AbsorbRatio/compcontrib",
+			"type": "python",
+			"request": "launch",
+			"module": "AbsorbRatio.compcontrib"
+		},
+		{
+			"name": "AbsorbRatio/test",
+			"type": "python",
+			"request": "launch",
+			"module": "AbsorbRatio.test"
+		},
+		{
+			"name": "AbsorbRatio/ar",
+			"type": "python",
+			"request": "launch",
+			"module": "AbsorbRatio.ar"
+		},
+		{
+			"name": "IndustrialMomentumAndReverse/run",
+			"type": "python",
+			"request": "launch",
+			"module": "IndustrialMomentumAndReverse.run"
+		},
+		{
+			"name": "IndustrialMomentumAndReverse/matprocessor",
+			"type": "python",
+			"request": "launch",
+			"module": "IndustrialMomentumAndReverse.matprocessor"
 		}
 	]
 }

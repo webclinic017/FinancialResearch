@@ -168,3 +168,4 @@ assets/data/*
 **/data
 *data*
 **/*data*
+!database
