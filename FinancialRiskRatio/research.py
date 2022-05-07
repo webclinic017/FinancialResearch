@@ -61,4 +61,3 @@ score = ratio.calculator.rolling(window=4, func=calc_unit, grouper=industry['gro
 
 # ---
 (score - 0.5).drawer.draw('bar', datetime='20200331')
-# %%
