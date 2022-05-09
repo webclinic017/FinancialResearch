@@ -28,10 +28,16 @@
 			"module": "database.config"
 		},
 		{
-			"name": "database/config_",
+			"name": "database/__init__",
 			"type": "python",
 			"request": "launch",
-			"module": "database.config_"
+			"module": "database.__init__"
+		},
+		{
+			"name": "database/schema",
+			"type": "python",
+			"request": "launch",
+			"module": "database.schema"
 		},
 		{
 			"name": "database/utils/key",
@@ -52,6 +58,12 @@
 			"module": "database.utils.demjson"
 		},
 		{
+			"name": "database/utils/__init__",
+			"type": "python",
+			"request": "launch",
+			"module": "database.utils.__init__"
+		},
+		{
 			"name": "database/.vscode/settings",
 			"type": "python",
 			"request": "launch",
@@ -68,6 +80,12 @@
 			"type": "python",
 			"request": "launch",
 			"module": "database.data.wind"
+		},
+		{
+			"name": "database/data/__init__",
+			"type": "python",
+			"request": "launch",
+			"module": "database.data.__init__"
 		},
 		{
 			"name": "database/data/api",
@@ -88,10 +106,16 @@
 			"module": "SwQuandrant.run"
 		},
 		{
-			"name": "FinancialRiskRatio/scripts",
+			"name": "result/test",
 			"type": "python",
 			"request": "launch",
-			"module": "FinancialRiskRatio.scripts"
+			"module": "result.test"
+		},
+		{
+			"name": "FinancialRiskRatio/research",
+			"type": "python",
+			"request": "launch",
+			"module": "FinancialRiskRatio.research"
 		},
 		{
 			"name": "other/amount_concentration/calculate",
@@ -160,6 +184,12 @@
 			"module": "pandasquant.tools.common"
 		},
 		{
+			"name": "pandasquant/staff/provider",
+			"type": "python",
+			"request": "launch",
+			"module": "pandasquant.staff.provider"
+		},
+		{
 			"name": "pandasquant/staff/__init__",
 			"type": "python",
 			"request": "launch",
@@ -200,6 +230,12 @@
 			"type": "python",
 			"request": "launch",
 			"module": "pandasquant.staff.fetcher"
+		},
+		{
+			"name": "pandasquant/staff/crawler",
+			"type": "python",
+			"request": "launch",
+			"module": "pandasquant.staff.crawler"
 		},
 		{
 			"name": "pandasquant/.vscode/settings",

@@ -1,9 +1,9 @@
 # --- 导入依赖
-import pandasquant as pq
+from pandasquant import pd, Gallery, np
 from scipy.stats import norm
 
 # --- 需要的数据列表
-relation = pq.read_excel('FinancialRiskRatio/relation.xlsx').dropna()
+relation = pd.read_excel('FinancialRiskRatio/relation.xlsx').dropna()
 relation_list = set(relation['from'].to_list() + relation['to'].to_list())
 balance_indicator = list(map(lambda x: x.split('.')[1], list(filter(lambda x: x.startswith('balance'), relation_list))))
 income_indicator = list(map(lambda x: x.split('.')[1] , list(filter(lambda x: x.startswith('income'), relation_list))))
@@ -11,11 +11,11 @@ cashflow_indicator = list(map(lambda x: x.split('.')[1], list(filter(lambda x: x
 ttm_indicator = list(map(lambda x: x.split('.')[1], list(filter(lambda x: x.startswith('ttm'), relation_list))))
 
 # --- 读取必要的数据
-industry = pq.read_parquet('FinancialRiskRatio/data.nosync/industry.parquet')
-ttm = pq.read_parquet('FinancialRiskRatio/data.nosync/ttm.parquet')
-balance = pq.read_parquet('FinancialRiskRatio/data.nosync/balance.parquet')
-income = pq.read_parquet('FinancialRiskRatio/data.nosync/income.parquet')
-cashflow = pq.read_parquet('FinancialRiskRatio/data.nosync/cashflow.parquet')
+industry = pd.read_parquet('FinancialRiskRatio/data.nosync/industry.parquet')
+ttm = pd.read_parquet('FinancialRiskRatio/data.nosync/ttm.parquet')
+balance = pd.read_parquet('FinancialRiskRatio/data.nosync/balance.parquet')
+income = pd.read_parquet('FinancialRiskRatio/data.nosync/income.parquet')
+cashflow = pd.read_parquet('FinancialRiskRatio/data.nosync/cashflow.parquet')
 
 # --- ttm数据及industry数据需要对交易日进行调整
 ttm = ttm.converter.resample('q').last()
@@ -36,8 +36,19 @@ income.index.names = ['datetime', 'asset']
 ttm.index.names = ['datetime', 'asset']
 industry.index.names = ['datetime', 'asset']
 
+# --- 对利润表数据进行ttm处理
+income = income.converter.cum2diff(grouper=lambda x: x[0].year)
+income = income.groupby(level=1).rolling(4, min_periods=1).sum().droplevel(0)
+
+# --- 提取净利润
+net_profit = ttm.loc[:, 'net_profit_ttm']
+net_profit_forward = net_profit.converter.price2fwd(1)
+net_profit_industry = net_profit.groupby([pd.Grouper(level=0), industry.group]).mean()
+net_profit_industry_forward = net_profit_industry.converter.price2fwd(1)
+net_profit_industry_forward = net_profit_industry_forward.preprocessor.standarize(method='zscore')
+
 # --- 计算比值
-ratio = pq.DataFrame()
+ratio = pd.DataFrame()
 for i, rel in relation.iterrows():
     from_table = eval(rel['from'].split('.')[0])
     from_col = rel['from'].split('.')[1]
@@ -51,13 +62,35 @@ for i, rel in relation.iterrows():
 
 # --- 滚动窗口计算行业内的财务质量得分
 def calc_unit(data):
+    def _calc_inner_ind(_data):
+        res = 1 - norm.sf(_data) * 2
+        res = pd.DataFrame(res, index=_data.index, columns=_data.columns)
+        return res.groupby(level=1).last().mean(axis=1)
+
     # deextreme, normalization
     data = data.preprocessor.deextreme('md_correct').preprocessor.standarize("zscore")
-    dev = pq.DataFrame(1 - norm.sf(data) * 2, index=data.index, columns=data.columns)
-    score = dev.abs().mean().mean()
+    # the latest industry infomation
+    idx = data.index.get_level_values(0)[-1]
+    currect_group = industry.loc[idx].group.to_dict()
+
+    dev = data.groupby(lambda x: currect_group.get(x[1], '')).apply(_calc_inner_ind)
+    score = dev.abs().groupby(level=1).last()
     return score
 
-score = ratio.calculator.rolling(window=4, func=calc_unit, grouper=industry['group'])
+score = ratio.calculator.rolling(window=30, func=calc_unit)
 
 # ---
-(score - 0.5).drawer.draw('bar', datetime='20200331')
+# ic = score.describer.ic(net_profit_forward)
+ic = score.describer.ic(net_profit_forward, grouper=industry.group)
+test_result = ic.tester.sigtest()
+
+# ---
+plot_asset = '000551.SZ'
+with Gallery(1, 1) as gallery:
+    ax = gallery.axes[0, 0]
+    score.drawer.draw('line', asset=plot_asset, ax=ax, color='g')
+    net_profit_forward.loc[score.index[0]:].drawer.draw('line', 
+        asset=plot_asset, ax=ax.twinx(), style='--')
+    # net_profit_industry.loc[score.index[0]:].drawer.draw('line',
+    #     asset=plot_asset, ax=ax.twinx(), color='r', label='net_profit')
+    ax.legend()
