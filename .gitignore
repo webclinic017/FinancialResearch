@@ -169,3 +169,11 @@ assets/data/*
 *data*
 **/*data*
 !database
+
+# 垃圾箱 / 草稿箱
+trash/
+trash.nosync/
+trashbin/
+trashbin.nosync/
+scripts/
+scripts.nosync/

@@ -1,5 +1,6 @@
 # --- 导入依赖
-from pandasquant import pd, Gallery, np
+import pandasquant as pq
+import pandas as pd
 from scipy.stats import norm
 
 # --- 需要的数据列表
@@ -60,6 +61,9 @@ for i, rel in relation.iterrows():
     to_var = to_var[~to_var.index.duplicated(keep='first')]
     ratio[i] = from_var / to_var
 
+# 尝试减少数据量
+ratio = ratio[ratio.columns[(ratio.count() / ratio.shape[0]) > 0.5]]
+
 # --- 滚动窗口计算行业内的财务质量得分
 def calc_unit(data):
     def _calc_inner_ind(_data):
@@ -79,14 +83,29 @@ def calc_unit(data):
 
 score = ratio.calculator.rolling(window=30, func=calc_unit)
 
+# --- 板块分类器
+plate_dict = {
+    '600': 'zb',
+    '601': 'zb',
+    '603': 'zb',
+    '605': 'zb',
+    '000': 'zb',
+    '002': 'zxb',
+    '300': 'cyb',
+    '688': 'kcb',
+}
+
 # ---
 # ic = score.describer.ic(net_profit_forward)
-ic = score.describer.ic(net_profit_forward, grouper=industry.group)
+# ic = score.describer.ic(net_profit_forward, grouper=industry.group)
+ic = score.describer.ic(net_profit_forward, grouper=lambda x: plate_dict.get(x[1][:3], 'unknown'))
 test_result = ic.tester.sigtest()
+ir = ic.groupby(level=1).mean() / ic.groupby(level=1).std()
+# ir = ic.mean() / ic.std()
 
 # ---
 plot_asset = '000551.SZ'
-with Gallery(1, 1) as gallery:
+with pq.Gallery(1, 1) as gallery:
     ax = gallery.axes[0, 0]
     score.drawer.draw('line', asset=plot_asset, ax=ax, color='g')
     net_profit_forward.loc[score.index[0]:].drawer.draw('line', 

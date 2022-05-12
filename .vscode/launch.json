@@ -118,6 +118,12 @@
 			"module": "FinancialRiskRatio.research"
 		},
 		{
+			"name": "RSRS/research",
+			"type": "python",
+			"request": "launch",
+			"module": "RSRS.research"
+		},
+		{
 			"name": "other/amount_concentration/calculate",
 			"type": "python",
 			"request": "launch",
