@@ -10,6 +10,12 @@
 			"justMyCode": true
 		},
 		{
+			"name": "database",
+			"type": "python",
+			"request": "launch",
+			"module": "database"
+		},
+		{
 			"name": "database/save",
 			"type": "python",
 			"request": "launch",
@@ -76,22 +82,10 @@
 			"module": "database.data.local"
 		},
 		{
-			"name": "database/data/wind",
-			"type": "python",
-			"request": "launch",
-			"module": "database.data.wind"
-		},
-		{
 			"name": "database/data/__init__",
 			"type": "python",
 			"request": "launch",
 			"module": "database.data.__init__"
-		},
-		{
-			"name": "database/data/api",
-			"type": "python",
-			"request": "launch",
-			"module": "database.data.api"
 		},
 		{
 			"name": "database/data/crawler",
@@ -106,22 +100,10 @@
 			"module": "SwQuandrant.run"
 		},
 		{
-			"name": "result/test",
-			"type": "python",
-			"request": "launch",
-			"module": "result.test"
-		},
-		{
 			"name": "FinancialRiskRatio/research",
 			"type": "python",
 			"request": "launch",
 			"module": "FinancialRiskRatio.research"
-		},
-		{
-			"name": "RSRS/research",
-			"type": "python",
-			"request": "launch",
-			"module": "RSRS.research"
 		},
 		{
 			"name": "other/amount_concentration/calculate",
@@ -134,6 +116,12 @@
 			"type": "python",
 			"request": "launch",
 			"module": "other.amount_concentration.validate"
+		},
+		{
+			"name": "HTML/script",
+			"type": "python",
+			"request": "launch",
+			"module": "HTML.script"
 		},
 		{
 			"name": "Factor/tools/prepare",
@@ -248,6 +236,12 @@
 			"type": "python",
 			"request": "launch",
 			"module": "pandasquant..vscode.settings"
+		},
+		{
+			"name": "scripts/test",
+			"type": "python",
+			"request": "launch",
+			"module": "scripts.test"
 		},
 		{
 			"name": "AbsorbRatio/compcontrib",
