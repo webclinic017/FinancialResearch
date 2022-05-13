@@ -92,6 +92,11 @@ tables = {
         "date_col": "report_period",
         "check_date": current_report_dates,
     },
+    "intensity_trend": {
+        "func": pq.Api.intensity_trend,
+        "date_col": "trading_date",
+        "check_date": current_trade_dates,
+    },
 }
 
 for table, conf in tables.items():

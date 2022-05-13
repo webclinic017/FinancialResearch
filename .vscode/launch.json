@@ -82,10 +82,22 @@
 			"module": "Factor.define.valuation"
 		},
 		{
+			"name": "Factor/define/pricevolume",
+			"type": "python",
+			"request": "launch",
+			"module": "Factor.define.pricevolume"
+		},
+		{
 			"name": "Factor/define/quality",
 			"type": "python",
 			"request": "launch",
 			"module": "Factor.define.quality"
+		},
+		{
+			"name": "Factor/define/leverage",
+			"type": "python",
+			"request": "launch",
+			"module": "Factor.define.leverage"
 		},
 		{
 			"name": "Factor/define/base",
