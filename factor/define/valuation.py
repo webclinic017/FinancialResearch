@@ -1,0 +1,93 @@
+import pandasquant as pq
+from Factor.define.base import FactorBase
+
+class Ep(FactorBase):
+    def __init__(self):
+        super().__init__('ep')
+    
+    def calculate(self, date):
+        pe = pq.Stock.derivative_indicator(date, date,
+            fields='s_val_pe_ttm').droplevel(0).s_val_pe_ttm
+        self.factor = 1 / pe
+    
+class Epcut(FactorBase):
+    def __init__(self):
+        super().__init__('epcut')
+    
+    def calculate(self, date):
+        ecut = pq.Stock.pit_financial(date, date,
+            fields='s_dfa_deductedprofit_ttm').\
+            droplevel(0).s_dfa_deductedprofit_ttm
+        mv = pq.Stock.derivative_indicator(date, date,
+            fields='s_val_mv').droplevel(0).s_val_mv
+        self.factor = ecut / mv
+        
+class Bp(FactorBase):
+    def __init__(self):
+        super().__init__('bp')
+    
+    def calculate(self, date):
+        pb = pq.Stock.derivative_indicator(date, date,
+            fields='s_val_pb_new').droplevel(0).s_val_pb_new
+        self.factor = 1 / pb
+
+class Sp(FactorBase):
+    def __init__(self):
+        super().__init__('sp')
+    
+    def calculate(self, date):
+        ps = pq.Stock.derivative_indicator(date, date,
+            fields='s_val_ps_ttm').droplevel(0).s_val_ps_ttm
+        self.factor = 1 / ps
+
+class Ncfp(FactorBase):
+    def __init__(self):
+        super().__init__('ncfp')
+    
+    def calculate(self, date):
+        pcfn = pq.Stock.derivative_indicator(date, date,
+            fields='s_val_pcf_ncfttm').\
+                droplevel(0).s_val_pcf_ncfttm
+        self.factor = 1 / pcfn
+
+class Ocfp(FactorBase):
+    def __init__(self):
+        super().__init__('ocfp')
+    
+    def calculate(self, date):
+        ocfn = pq.Stock.derivative_indicator(date, date,
+            fields='s_val_pcf_ocfttm').\
+                droplevel(0).s_val_pcf_ocfttm
+        self.factor = 1 / ocfn
+
+class Dp(FactorBase):
+    def __init__(self):
+        super().__init__('dp')
+    
+    def calculate(self, date):
+        pd = pq.Stock.derivative_indicator(date, date,
+            fields='s_price_div_dps').\
+                droplevel(0).s_price_div_dps
+        self.factor = 1 / pd
+    
+class Gpe(FactorBase):
+    def __init__(self):
+        super().__init__('gpe')
+    
+    def calculate(self, date):
+        before = pq.Stock.nearby_n_trade_date(date, -252)
+        ptoday = pq.Stock.derivative_indicator(date, date,
+            fields='net_profit_parent_comp_ttm').\
+                droplevel(0).net_profit_parent_comp_ttm
+        pbefore = pq.Stock.derivative_indicator(before, before,
+            fields='net_profit_parent_comp_ttm').\
+                droplevel(0).net_profit_parent_comp_ttm
+        pe = pq.Stock.derivative_indicator(date, date,
+            fields='s_val_pe_ttm').\
+                droplevel(0).s_val_pe_ttm
+        self.factor = ((ptoday - pbefore) / pbefore) / pe
+
+
+if __name__ == "__main__":
+    factor = Gpe()
+    print(factor('20200106'))

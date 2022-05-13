@@ -1,6 +1,5 @@
 import pandas as pd
-import numpy as np
-from utils import *
+import pandasquant as pq
 
 
 class FactorBase(object):
@@ -24,38 +23,32 @@ class FactorBase(object):
         5. rewrite `factor_modify` according to your needs,
             this method adjusted the index into multiindex form and rename
     '''
-    def __init__(self, name, with_group=True):
+    def __init__(self, name):
         self.name = name
-        self.with_group = with_group
 
-    def basic_info(self, date):
-        self.stocks = index_hs300_close_weight(date, date, ['s_con_windcode']).s_con_windcode.tolist()
-        self.industry = plate_info(date, date, ['code', 'zxname_level1'])\
-            .rename(columns={'zxname_level1': 'group'})
+    def info(self, date):
+        self.stocks = pq.Stock.index_weight(date, date, fields='code', 
+            and_='index_code="000300.SH"').code.to_list()
 
-    def calcuate_factor(self, date):
-        self.factor = pd.Series(dtype='float32')
-        self.factor.name = self.name
-        pass
+    def calculate(self, date):
+        raise NotImplementedError
 
-    def factor_process(self):
-        self.factor = pd.concat([self.factor, self.industry], axis=1)
-        self.factor[self.name] = self.factor.groupby('group').apply(
-            lambda x: standard(x.loc[:, self.name])).droplevel(0).sort_index()
-        self.factor[self.name] = self.factor.groupby('group').apply(
-            lambda x: deextreme(x.loc[:, self.name], n=3)).droplevel(0).sort_index()
-        self.factor[self.name] = missing_fill(self.factor[self.name])
-        self.factor = self.factor.loc[self.stocks]
+    def process(self, date):
+        grouper = pq.Stock.plate_info(date, date, fields='citi_industry_name1')\
+            .citi_industry_name1.droplevel(0)
+        self.factor = self.factor.loc[self.factor.index.intersection(self.stocks)]
+        self.factor = self.factor.preprocessor.deextreme(method='mad', grouper=grouper)\
+            .preprocessor.standarize(method='zscore', grouper=grouper)\
+            .preprocessor.fillna(method='mean', grouper=grouper)
     
-    def factor_modify(self):
-        self.factor.index = pd.MultiIndex.from_product([[self.date], self.factor.index])
+    def modify(self, date):
+        self.factor.index = pd.MultiIndex.from_product([[pq.str2time(date)], self.factor.index])
         self.factor.index.names = ["date", "asset"]
-        if not self.with_group:
-            self.factor = self.factor.loc[:, self.name]
-    
-    def __call__(self, date) -> Any:
-        self.basic_info()
-        self.calcuate_factor(date)
-        self.factor_process()
-        self.factor_modify()
+        self.factor.columns = [self.name]
+
+    def __call__(self, date) -> ...:
+        self.info(date)
+        self.calculate(date)
+        self.process(date)
+        self.modify(date)
         return self.factor

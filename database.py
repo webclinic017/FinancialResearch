@@ -5,8 +5,6 @@ import sqlalchemy as sql
 
 
 def check(table: str, date_col: str):
-    
-
     # check whether the table exists
     table_status = stockdb.execute("SELECT name FROM sqlite_master"
         " WHERE type='table' AND name='%s'" % table).fetchall()
@@ -43,53 +41,58 @@ tables = {
         "func": pq.Api.trade_date,
         "date_col": "trading_date",
         "check_date": current_trade_dates,
-        },
+    },
     "plate_info": {
         "func": pq.Api.plate_info,
         "date_col": "date",
         "check_date": current_trade_dates,
-        }, 
+    }, 
     "market_daily": {
         "func": pq.Api.market_daily,
         "date_col": "trading_date",
         "check_date": current_trade_dates,
-        }, 
+    }, 
     "index_market_daily": {
         "func": pq.Api.index_market_daily,
         "date_col": "trading_date",
         "check_date": current_trade_dates,
-        }, 
+    }, 
     "derivative_indicator": {
         "func": pq.Api.derivative_indicator,
         "date_col": "trading_date",
         "check_date": current_trade_dates,
-        }, 
+    }, 
     "pit_financial": {
         "func": pq.Api.pit_financial,
         "date_col": "trading_date",
         "check_date": current_trade_dates,
-        }, 
+    }, 
     "balance_sheet": {
         "func": pq.Api.balance_sheet,
         "date_col": "report_period",
         "check_date": current_report_dates,
-        }, 
+    }, 
     "cashflow_sheet": {
         "func": pq.Api.cashflow_sheet,
         "date_col": "report_period",
         "check_date": current_report_dates,
-        }, 
+    }, 
     "income_sheet": {
         "func": pq.Api.income_sheet,
         "date_col": "report_period",
         "check_date": current_report_dates,
-        },
+    },
     "index_weight": {
         "func": pq.Api.index_weight,
         "date_col": "date",
         "check_date": current_trade_dates[current_trade_dates >= '20100104'],
-    }
-    }
+    },
+    "financial_indicator": {
+        "func": pq.Api.financial_indicator,
+        "date_col": "report_period",
+        "check_date": current_report_dates,
+    },
+}
 
 for table, conf in tables.items():
     print(f'[*] Getting latest data for {table} ...')

@@ -16,84 +16,6 @@
 			"module": "database"
 		},
 		{
-			"name": "database/save",
-			"type": "python",
-			"request": "launch",
-			"module": "database.save"
-		},
-		{
-			"name": "database/run",
-			"type": "python",
-			"request": "launch",
-			"module": "database.run"
-		},
-		{
-			"name": "database/config",
-			"type": "python",
-			"request": "launch",
-			"module": "database.config"
-		},
-		{
-			"name": "database/__init__",
-			"type": "python",
-			"request": "launch",
-			"module": "database.__init__"
-		},
-		{
-			"name": "database/schema",
-			"type": "python",
-			"request": "launch",
-			"module": "database.schema"
-		},
-		{
-			"name": "database/utils/key",
-			"type": "python",
-			"request": "launch",
-			"module": "database.utils.key"
-		},
-		{
-			"name": "database/utils/io",
-			"type": "python",
-			"request": "launch",
-			"module": "database.utils.io"
-		},
-		{
-			"name": "database/utils/demjson",
-			"type": "python",
-			"request": "launch",
-			"module": "database.utils.demjson"
-		},
-		{
-			"name": "database/utils/__init__",
-			"type": "python",
-			"request": "launch",
-			"module": "database.utils.__init__"
-		},
-		{
-			"name": "database/.vscode/settings",
-			"type": "python",
-			"request": "launch",
-			"module": "database..vscode.settings"
-		},
-		{
-			"name": "database/data/local",
-			"type": "python",
-			"request": "launch",
-			"module": "database.data.local"
-		},
-		{
-			"name": "database/data/__init__",
-			"type": "python",
-			"request": "launch",
-			"module": "database.data.__init__"
-		},
-		{
-			"name": "database/data/crawler",
-			"type": "python",
-			"request": "launch",
-			"module": "database.data.crawler"
-		},
-		{
 			"name": "SwQuandrant/run",
 			"type": "python",
 			"request": "launch",
@@ -118,10 +40,10 @@
 			"module": "other.amount_concentration.validate"
 		},
 		{
-			"name": "HTML/script",
+			"name": "HTML/01/01",
 			"type": "python",
 			"request": "launch",
-			"module": "HTML.script"
+			"module": "HTML.01.01"
 		},
 		{
 			"name": "Factor/tools/prepare",
@@ -142,10 +64,28 @@
 			"module": "Factor.define.__init__"
 		},
 		{
+			"name": "Factor/define/growth",
+			"type": "python",
+			"request": "launch",
+			"module": "Factor.define.growth"
+		},
+		{
 			"name": "Factor/define/size",
 			"type": "python",
 			"request": "launch",
 			"module": "Factor.define.size"
+		},
+		{
+			"name": "Factor/define/valuation",
+			"type": "python",
+			"request": "launch",
+			"module": "Factor.define.valuation"
+		},
+		{
+			"name": "Factor/define/quality",
+			"type": "python",
+			"request": "launch",
+			"module": "Factor.define.quality"
 		},
 		{
 			"name": "Factor/define/base",
