@@ -30,7 +30,7 @@ trade_date_table = stockdb.execute("SELECT name FROM sqlite_master"
 if not trade_date_table:
     # table not exists
     pq.Api.trade_date(start='20070101', end='20231231').databaser.\
-        to_sql('trade_date', stockdb, index=False, on_duplicate=True)
+        to_sql('trade_date', stockdb, index=True, on_duplicate=True)
     
 current_trade_dates = pd.read_sql(f"select trading_date from trade_date where trading_date <= '{today}'", 
     stockdb, index_col="trading_date", parse_dates='trading_date').index

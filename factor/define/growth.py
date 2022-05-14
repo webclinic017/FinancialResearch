@@ -1,5 +1,5 @@
 import pandasquant as pq
-from Factor.define.base import FactorBase
+from factor.define.base import FactorBase
 
 
 class SalesGQ(FactorBase):
