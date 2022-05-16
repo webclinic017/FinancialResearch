@@ -22,7 +22,7 @@ class ProfitGQ(FactorBase):
 
 class OcfGQ(FactorBase):
     def __init__(self):
-        super().__init__('roegq')
+        super().__init__('ocfgq')
     
     def calculate(self, date):
         report_dates = pq.nearest_report_period(date, 5)
@@ -36,7 +36,7 @@ class OcfGQ(FactorBase):
 
 class RoeGQ(FactorBase):
     def __init__(self):
-        super().__init__('ocfgq')
+        super().__init__('roegq')
     
     def calculate(self, date):
         report_date = pq.nearest_report_period(date, 1)[0]

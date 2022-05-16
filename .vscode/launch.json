@@ -16,10 +16,16 @@
 			"module": "database"
 		},
 		{
-			"name": "test",
+			"name": "factor/tools/config",
 			"type": "python",
 			"request": "launch",
-			"module": "test"
+			"module": "factor.tools.config"
+		},
+		{
+			"name": "factor/tools/common",
+			"type": "python",
+			"request": "launch",
+			"module": "factor.tools.common"
 		},
 		{
 			"name": "factor/define/technical",
@@ -44,6 +50,12 @@
 			"type": "python",
 			"request": "launch",
 			"module": "factor.define.size"
+		},
+		{
+			"name": "factor/define/turnover",
+			"type": "python",
+			"request": "launch",
+			"module": "factor.define.turnover"
 		},
 		{
 			"name": "factor/define/valuation",
@@ -80,6 +92,12 @@
 			"type": "python",
 			"request": "launch",
 			"module": "factor.define.base"
+		},
+		{
+			"name": "factor/examine/tester",
+			"type": "python",
+			"request": "launch",
+			"module": "factor.examine.tester"
 		},
 		{
 			"name": "HtMachineLearning/01/01",

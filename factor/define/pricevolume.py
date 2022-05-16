@@ -18,8 +18,23 @@ class HAphla(FactorBase):
             fields='pct_change')['pct_change']
         self.factor = stock_price.groupby(level=1).apply(lambda x:
             x.droplevel(1).regressor.ols(index_price).loc["const", "coef"]
-            if len(x) >= 30 else np.nan
-        )
+            if len(x) >= 30 else np.nan)
+
+class HBeta(FactorBase):
+    def __init__(self, period):
+        name = 'hbeta_' + str(period)
+        self.period = period
+        super().__init__(name)
+    
+    def calculate(self, date):
+        last_date = pq.Stock.nearby_n_trade_date(date, -self.period + 1)
+        index_price = pq.Stock.index_market_daily(last_date, date,
+            fields='pct_change', code='000001.SH').droplevel(1)['pct_change']
+        stock_price = pq.Stock.market_daily(last_date, date,
+            fields='pct_change')['pct_change']
+        self.factor = stock_price.groupby(level=1).apply(lambda x:
+            x.droplevel(1).regressor.ols(index_price).iloc[-1, 0]
+            if len(x) >= 30 else np.nan)
 
 class Momentum(FactorBase):
     def __init__(self, period: int):
@@ -69,10 +84,19 @@ class ExpWeightedMomentum(FactorBase):
                 (x['pct_change'] * x['s_dq_turn'] * exp).sum()
                 if len(x) == self.period else np.nan)
 
+class LogPrice(FactorBase):
+    def __init__(self):
+        super().__init__('logprice')
+    
+    def calculate(self, date):
+        price = pq.Stock.market_daily(date, date, 
+            fields='close').droplevel(0).close
+        self.factor = np.log(price)
+
 
 if __name__ == "__main__":
     import time
-    factor = ExpWeightedMomentum(20)
+    factor = LogPrice()
     start = time.time()
     print(factor('20200106'))
     print(f'time: {time.time() - start:.2f}s')
