@@ -6,21 +6,13 @@
 
 | 因子名称 | 因子大类 | 因子定义 |
 |:---:|:---:|:---:|
-| return_1m | Technical | Stock total return over past 20 trading days |
-| return_3m | Technical | Stock total return over past 60 trading days |
-| return_12m | Technical | Stock total return over past 250 trading days |
-| turnover_1m | Technical | Stock average turnover in past 20 days, MA(VOLUME/CAPITAL, 20) |
-| turnover_3m | Technical | Stock average turnover in past 60 days, MA(VOLUME/CAPITAL, 60) |
-| volatility_1m | Technical | Stock total return standard deviation over past 20 trading days |
-| volatility_3m | Technical | Stock total return standard deviation over past 60 trading days |
-| volatility_12m | Technical | Stock total return standard deviation over past 120 trading days |
-| ar | Technical | sum of (daily high price - daily open price)/(daily open price - daily low price) of previous 20 days |
-| br | Technical | sum of maximum(0, (high - previous close price)) / sum of maximum(0, (previous close price - low)) of previous 20 days |
-| bias_1m | Technical | (last close price - 20 days close price moving average) / 20 days close price moving average |
-| davol_1m | Technical | Stock Turnover 20 days / Turnover 120 days |
-| a_c_mkt_cap | Size | log(total circulating A shares * close price) |
-| a_mkt_cap | Size | log(total A shares * previous close price) |
-| market_cap | Size | log(total shares * previous close price) |
+| Return | pricevolume | 股票收益率 |
+| Turnover | turnover | 换手率 |
+| Volatility | volatility | 波动率 |
+| Ar | pricevolume | 过去周期内股票的 `(最高价-开盘价)/(开盘价-最低价)` 之和 |
+| Br | pricevolume | 过去周期内股票每日`max(0, 最高价 - 昨日收盘价)之和 / max(0, 昨日收盘价 - 最低价)`之和 |
+| Bias | pricevolume | `(昨日收盘价 - 股票过去周期内的收盘价移动平均) / 股票过去周期内的收盘价移动平均` |
+| Davol | pricevolume | `股票短时间内的换手率移动平均 / 股票长周期内换手率的移动平均` |
 
 ## 注意事项
 
@@ -28,13 +20,15 @@
 
 1. 获取沪深300股票池以及全市场股票对应的行业信息（本项目采用中信一级行业分类）
 2. 获取最少量的数据并计算对应的因子值
-3. 对计算出来的结果进行数据预处理，包括去极值、标准化和缺失值填充
+3. 对计算出来的结果进行数据预处理，包括去极值、标准化和缺失值填充，均在行业内进行
 4. 将数据格式进行调整，包括修改Series的名称对数据索引进行调整
 
 在第一个阶段，对每一个因子几乎都是相同的操作
 
-在第二个阶段要注意的的问题是一定要保持数据量的最小化，如计算20个交易日的收益率，一定要采用当天与过去20天的当日收盘价，否则获取过多的冗余数据会导致操作时间的大幅度延长
+在第二个阶段要注意的的问题是一定要保持数据量的最小化，如计算20个交易日的收益率，一定要采用当天与过去20天的当日收盘价，否则获取过多的冗余数据会导致操作时间的大幅度延长，这一步的计算要将因子值以一维索引的DataFrame形式返回，索引为股票代码
 
 第三个阶段对计算出来的结果进行数据预处理在每一个因子中都是相同的
 
-在最后一个阶段，对数据进行调整，包括将数据调整为Series格式，保持Series的name属性与函数名的一致性，同时将所以调整为双索引，一级索引为日期，用date命名，二级索引为股票代码，用code命名
+在最后一个阶段，对数据进行调整，包括将数据调整为Series格式，保持Series的name属性与函数名的一致性，同时将所以调整为双索引，一级索引为日期
+
+以上定义因子的模版已在FactorBase当中完成，如果没有特别的需求可以直接继承FactorBase基类，完成calculate函数实现因子的计算
