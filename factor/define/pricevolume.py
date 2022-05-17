@@ -4,7 +4,12 @@ import pandasquant as pq
 from factor.define.base import FactorBase
 
 
-class HAphla(FactorBase):
+class FactorPriceVolume(FactorBase):
+    def __init__(self, name):
+        super().__init__(name)
+        self.klass = 'pricevolume'
+    
+class HAlpha(FactorPriceVolume):
     def __init__(self, period):
         name = 'haplha_' + str(period)
         self.period = period
@@ -20,7 +25,7 @@ class HAphla(FactorBase):
             x.droplevel(1).regressor.ols(index_price).loc["const", "coef"]
             if len(x) >= 30 else np.nan)
 
-class HBeta(FactorBase):
+class HBeta(FactorPriceVolume):
     def __init__(self, period):
         name = 'hbeta_' + str(period)
         self.period = period
@@ -36,7 +41,7 @@ class HBeta(FactorBase):
             x.droplevel(1).regressor.ols(index_price).iloc[-1, 0]
             if len(x) >= 30 else np.nan)
 
-class Momentum(FactorBase):
+class Momentum(FactorPriceVolume):
     def __init__(self, period: int):
         name = 'momentum_' + str(period)
         self.period = period
@@ -50,7 +55,7 @@ class Momentum(FactorBase):
             fields='adj_close').droplevel(0).adj_close
         self.factor = (price_date - price_lastdate) / price_lastdate
 
-class WeightedMomentum(FactorBase):
+class WeightedMomentum(FactorPriceVolume):
     def __init__(self, period: int):
         name = 'weightedmomentum_' + str(period)
         self.period = period 
@@ -66,7 +71,7 @@ class WeightedMomentum(FactorBase):
             .groupby(level=1).apply(lambda x: 
                 (x['pct_change'] * x['s_dq_turn']).mean())
 
-class ExpWeightedMomentum(FactorBase):
+class ExpWeightedMomentum(FactorPriceVolume):
     def __init__(self, period: int):
         name = 'expweightedmomentum_' + str(period)
         self.period = period
@@ -84,7 +89,7 @@ class ExpWeightedMomentum(FactorBase):
                 (x['pct_change'] * x['s_dq_turn'] * exp).sum()
                 if len(x) == self.period else np.nan)
 
-class LogPrice(FactorBase):
+class LogPrice(FactorPriceVolume):
     def __init__(self):
         super().__init__('logprice')
     

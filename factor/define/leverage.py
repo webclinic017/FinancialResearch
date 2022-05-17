@@ -1,7 +1,13 @@
 import pandasquant as pq
 from factor.define.base import FactorBase
 
-class FinancialLeverage(FactorBase):
+
+class FactorLeverage(FactorBase):
+    def __init__(self, name):
+        super().__init__(name)
+        self.klass = 'leverage'
+
+class FinancialLeverage(FactorLeverage):
     def __init__(self):
         super().__init__('financialleverage')
     
@@ -13,7 +19,7 @@ class FinancialLeverage(FactorBase):
             fields='tot_liab').droplevel(0).tot_liab
         self.factor = asset / (asset - liab)
     
-class DebtEquityRatio(FactorBase):
+class DebtEquityRatio(FactorLeverage):
     def __init__(self):
         super().__init__('debtequityratio')
     
@@ -27,7 +33,7 @@ class DebtEquityRatio(FactorBase):
             fields='tot_non_cur_liab').droplevel(0).tot_non_cur_liab
         self.factor = noncurliab / (asset - liab)
     
-class CashRatio(FactorBase):
+class CashRatio(FactorLeverage):
     def __init__(self):
         super().__init__('cashratio')
     
@@ -39,7 +45,7 @@ class CashRatio(FactorBase):
             fields='tot_assets').droplevel(0).tot_assets
         self.factor = cash / asset
 
-class CurrentRatio(FactorBase):
+class CurrentRatio(FactorLeverage):
     def __init__(self):
         super().__init__('currentratio')
     

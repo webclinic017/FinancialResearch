@@ -2,7 +2,12 @@ import pandasquant as pq
 from factor.define.base import FactorBase
 
 
-class Std(FactorBase):
+class FactorVolatility(FactorBase):
+    def __init__(self, name):
+        super().__init__(name)
+        self.klass = 'volatility'
+
+class Std(FactorVolatility):
     def __init__(self, period: int):
         name = 'std_' + str(period)
         self.period = period
@@ -14,7 +19,7 @@ class Std(FactorBase):
             fields='pct_change')['pct_change']
         self.factor = change.groupby(level=1).std()
 
-class FF3F(FactorBase):
+class FF3F(FactorVolatility):
     def __init__(self, period):
         name = 'ff3f_' + str(period)
         self.period = period

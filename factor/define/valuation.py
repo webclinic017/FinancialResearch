@@ -1,7 +1,13 @@
 import pandasquant as pq
 from factor.define.base import FactorBase
 
-class Ep(FactorBase):
+
+class FactorValuation(FactorBase):
+    def __init__(self, name):
+        super().__init__(name)
+        self.klass = 'valuation'
+
+class Ep(FactorValuation):
     def __init__(self):
         super().__init__('ep')
     
@@ -10,7 +16,7 @@ class Ep(FactorBase):
             fields='s_val_pe_ttm').droplevel(0).s_val_pe_ttm
         self.factor = 1 / pe
     
-class Epcut(FactorBase):
+class Epcut(FactorValuation):
     def __init__(self):
         super().__init__('epcut')
     
@@ -22,7 +28,7 @@ class Epcut(FactorBase):
             fields='s_val_mv').droplevel(0).s_val_mv
         self.factor = ecut / mv
         
-class Bp(FactorBase):
+class Bp(FactorValuation):
     def __init__(self):
         super().__init__('bp')
     
@@ -31,7 +37,7 @@ class Bp(FactorBase):
             fields='s_val_pb_new').droplevel(0).s_val_pb_new
         self.factor = 1 / pb
 
-class Sp(FactorBase):
+class Sp(FactorValuation):
     def __init__(self):
         super().__init__('sp')
     
@@ -40,7 +46,7 @@ class Sp(FactorBase):
             fields='s_val_ps_ttm').droplevel(0).s_val_ps_ttm
         self.factor = 1 / ps
 
-class Ncfp(FactorBase):
+class Ncfp(FactorValuation):
     def __init__(self):
         super().__init__('ncfp')
     
@@ -50,7 +56,7 @@ class Ncfp(FactorBase):
                 droplevel(0).s_val_pcf_ncfttm
         self.factor = 1 / pcfn
 
-class Ocfp(FactorBase):
+class Ocfp(FactorValuation):
     def __init__(self):
         super().__init__('ocfp')
     
@@ -60,7 +66,7 @@ class Ocfp(FactorBase):
                 droplevel(0).s_val_pcf_ocfttm
         self.factor = 1 / ocfn
 
-class Dp(FactorBase):
+class Dp(FactorValuation):
     def __init__(self):
         super().__init__('dp')
     
@@ -70,7 +76,7 @@ class Dp(FactorBase):
                 droplevel(0).s_price_div_dps
         self.factor = 1 / pd
     
-class Gpe(FactorBase):
+class Gpe(FactorValuation):
     def __init__(self):
         super().__init__('gpe')
     

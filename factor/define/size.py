@@ -2,7 +2,12 @@ import pandasquant as pq
 from factor.define.base import FactorBase
 
 
-class Capital(FactorBase):
+class FactorSize(FactorBase):
+    def __init__(self, name):
+        super().__init__(name)
+        self.klass = 'size'
+
+class Capital(FactorSize):
     def __init__(self):
         super().__init__('capital')
     

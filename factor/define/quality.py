@@ -2,7 +2,12 @@ import pandasquant as pq
 from factor.define.base import FactorBase
 
 
-class RoeQ(FactorBase):
+class FactorQuanlity(FactorBase):
+    def __init__(self, name):
+        super().__init__(name)
+        self.kalss = 'quanlity'
+
+class RoeQ(FactorQuanlity):
     def __init__(self):
         super().__init__('roeq')
     
@@ -11,7 +16,7 @@ class RoeQ(FactorBase):
         self.factor = pq.Stock.financial_indicator(report_period, report_period,
             fields='qfa_roe').droplevel(0).qfa_roe
 
-class RoeTTM(FactorBase):
+class RoeTTM(FactorQuanlity):
     def __init__(self):
         super().__init__('roettm')
     
@@ -19,7 +24,7 @@ class RoeTTM(FactorBase):
         self.factor = pq.Stock.pit_financial(date, date,
             fields='s_dfa_roe_ttm').droplevel(0).s_dfa_roe_ttm
 
-class RoaQ(FactorBase):
+class RoaQ(FactorQuanlity):
     def __init__(self):
         super().__init__('roaq')
     
@@ -28,7 +33,7 @@ class RoaQ(FactorBase):
         self.factor = pq.Stock.financial_indicator(report_period, report_period,
             fields='fa_roa2').droplevel(0).fa_roa2
 
-class RoaTTM(FactorBase):
+class RoaTTM(FactorQuanlity):
     def __init__(self):
         super().__init__('roattm')
     
@@ -36,7 +41,7 @@ class RoaTTM(FactorBase):
         self.factor = pq.Stock.pit_financial(date, date,
             fields='s_dfa_roa2_ttm').droplevel(0).s_dfa_roa2_ttm
 
-class GrossProfitMarginQ(FactorBase):
+class GrossProfitMarginQ(FactorQuanlity):
     def __init__(self):
         super().__init__('grossprofitmarginq')
     
@@ -45,7 +50,7 @@ class GrossProfitMarginQ(FactorBase):
         self.factor = pq.Stock.financial_indicator(report_period, report_period,
             fields='fa_grossmargin').droplevel(0).fa_grossmargin
 
-class GrossProfitMarginTTM(FactorBase):
+class GrossProfitMarginTTM(FactorQuanlity):
     def __init__(self):
         super().__init__('grossprofitmarginttm')
     
@@ -53,7 +58,7 @@ class GrossProfitMarginTTM(FactorBase):
         self.factor = pq.Stock.pit_financial(date, date,
             fields='s_dfa_grossmargin_ttm').droplevel(0).s_dfa_grossmargin_ttm
 
-class ProfitMarginQ(FactorBase):
+class ProfitMarginQ(FactorQuanlity):
     def __init__(self):
         super().__init__('profitmarginq')
     
@@ -62,7 +67,7 @@ class ProfitMarginQ(FactorBase):
         self.factor = pq.Stock.financial_indicator(report_period, report_period,
             fields='fa_deductedprofit').droplevel(0).fa_deductedprofit
 
-class ProfitMarginTTM(FactorBase):
+class ProfitMarginTTM(FactorQuanlity):
     def __init__(self):
         super().__init__('profitmarginttm')
     
@@ -70,7 +75,7 @@ class ProfitMarginTTM(FactorBase):
         self.factor = pq.Stock.pit_financial(date, date,
             fields='s_dfa_deductedprofit_ttm').droplevel(0).s_dfa_deductedprofit_ttm
 
-class AssetTurnoverQ(FactorBase):
+class AssetTurnoverQ(FactorQuanlity):
     def __init__(self):
         super().__init__('assetturnoverq')
 
@@ -79,7 +84,7 @@ class AssetTurnoverQ(FactorBase):
         self.factor = pq.Stock.financial_indicator(report_period, report_period,
             fields='fa_assetsturn').droplevel(0).fa_assetturnover
 
-class AssetTurnoverTTM(FactorBase):
+class AssetTurnoverTTM(FactorQuanlity):
     def __init__(self):
         super().__init__('assetturnoverttm')
     
@@ -87,7 +92,7 @@ class AssetTurnoverTTM(FactorBase):
         self.factor = pq.Stock.pit_financial(date, date,
             fields='s_dfa_currtassetstrate').droplevel(0).s_dfa_currtassetstrate
 
-class OperationCashflowRatioQ(FactorBase):
+class OperationCashflowRatioQ(FactorQuanlity):
     def __init__(self):
         super().__init__('oprationcashflowratioq')
 
@@ -99,7 +104,7 @@ class OperationCashflowRatioQ(FactorBase):
             fields='net_profit_excl_min_int_inc').droplevel(0).net_profit_excl_min_int_inc
         self.factor = ocf / np
 
-class OperationCashflowRatioTTM(FactorBase):
+class OperationCashflowRatioTTM(FactorQuanlity):
     def __init__(self):
         super().__init__('oprationcashflowratiottm')
     

@@ -155,6 +155,12 @@ assets/report/**/*.pdf
 # 结果的csv文件
 **/result/
 **/results
+**/result.nosync
+**/results.nosync
+result.nosync/
+results.nosync/
+result/
+results
 
 # 日志文件
 **/logs

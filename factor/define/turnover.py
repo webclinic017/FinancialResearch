@@ -1,7 +1,13 @@
 import pandasquant as pq
 from factor.define.base import FactorBase
 
-class Turnover(FactorBase):
+
+class FactorTurnover(FactorBase):
+    def __init__(self, name):
+        super().__init__(name)
+        self.klass = 'turnover'
+
+class Turnover(FactorTurnover):
     def __init__(self, period):
         name = 'turnover_' + str(period)
         self.period = period
@@ -12,7 +18,7 @@ class Turnover(FactorBase):
             fields='s_dq_freeturnover')['s_dq_freeturnover']
         self.factor = turnover.groupby(level=1).mean()
 
-class BiasTurnover(FactorBase):
+class BiasTurnover(FactorTurnover):
     def __init__(self, short_period, long_period):
         self.long_period = long_period
         self.short_period = short_period

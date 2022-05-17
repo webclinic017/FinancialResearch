@@ -2,7 +2,12 @@ import pandasquant as pq
 from factor.define.base import FactorBase
 
 
-class Macd(FactorBase):
+class FactorTechnical(FactorBase):
+    def __init__(self, name):
+        super().__init__(name)
+        self.klass = 'technical'
+
+class Macd(FactorTechnical):
     def __init__(self):
         super().__init__('macd')
     

@@ -2,7 +2,12 @@ import pandasquant as pq
 from factor.define.base import FactorBase
 
 
-class SalesGQ(FactorBase):
+class FactorGrowth(FactorBase):
+    def __init__(self, name):
+        super().__init__(name)
+        self.klass = 'growth'
+
+class SalesGQ(FactorGrowth):
     def __init__(self):
         super().__init__('salesgq')
     
@@ -11,7 +16,7 @@ class SalesGQ(FactorBase):
         self.factor = pq.Stock.financial_indicator(report_date, report_date, 
             fields='fa_yoy_or').droplevel(0).fa_yoy_or
 
-class ProfitGQ(FactorBase):
+class ProfitGQ(FactorGrowth):
     def __init__(self):
         super().__init__('profitgq')
     
@@ -20,7 +25,7 @@ class ProfitGQ(FactorBase):
         self.factor = pq.Stock.financial_indicator(report_date, report_date,
             fields='qfa_yoyprofit').droplevel(0).qfa_yoyprofit
 
-class OcfGQ(FactorBase):
+class OcfGQ(FactorGrowth):
     def __init__(self):
         super().__init__('ocfgq')
     
@@ -34,7 +39,7 @@ class OcfGQ(FactorBase):
             fields='net_cash_flows_oper_act').droplevel(0).net_cash_flows_oper_act
         self.factor = (ocf_thisyear - ocf_lastyear) / ocf_lastyear
 
-class RoeGQ(FactorBase):
+class RoeGQ(FactorGrowth):
     def __init__(self):
         super().__init__('roegq')
     

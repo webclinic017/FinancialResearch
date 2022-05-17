@@ -52,3 +52,9 @@ class FactorBase(object):
         self.process(date)
         self.modify(date)
         return self.factor
+    
+    def __str__(self) -> str:
+        return self.name
+    
+    def __repr__(self) -> str:
+        return self.name

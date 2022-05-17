@@ -1,6 +1,6 @@
 import pandas as pd
 import pandasquant as pq
-from factor.common import (
+from factor.tools import (
     get_factor_data, get_forward_return, get_industry_mapping,
     factors)
 
