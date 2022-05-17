@@ -22,7 +22,7 @@ class BiasTurnover(FactorTurnover):
     def __init__(self, short_period, long_period):
         self.long_period = long_period
         self.short_period = short_period
-        name = 'biasturnover_' + str(short_period) + '/' + str(long_period)
+        name = 'biasturnover_' + str(short_period) + '-' + str(long_period)
         super().__init__(name)
     
     def calculate(self, date):

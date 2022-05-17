@@ -16,16 +16,16 @@
 			"module": "database"
 		},
 		{
-			"name": "factor/tools/config",
+			"name": "factor/tester",
 			"type": "python",
 			"request": "launch",
-			"module": "factor.tools.config"
+			"module": "factor.tester"
 		},
 		{
-			"name": "factor/tools/common",
+			"name": "factor/tools",
 			"type": "python",
 			"request": "launch",
-			"module": "factor.tools.common"
+			"module": "factor.tools"
 		},
 		{
 			"name": "factor/define/technical",
@@ -92,12 +92,6 @@
 			"type": "python",
 			"request": "launch",
 			"module": "factor.define.base"
-		},
-		{
-			"name": "factor/examine/tester",
-			"type": "python",
-			"request": "launch",
-			"module": "factor.examine.tester"
 		},
 		{
 			"name": "HtMachineLearning/01/01",

@@ -1,56 +1,7 @@
 import pandas as pd
 import pandasquant as pq
-from factor.define.growth import *
-from factor.define.leverage import *
-from factor.define.pricevolume import *
-from factor.define.quality import *
-from factor.define.size import *
-from factor.define.technical import *
-from factor.define.turnover import *
-from factor.define.valuation import *
-from factor.define.volatility import *
+from factor.define.base import FactorBase
 
-factors = [
-    SalesGQ(),
-    ProfitGQ(),
-    OcfGQ(),
-    RoeGQ(),
-    FinancialLeverage(),
-    DebtEquityRatio(),
-    CashRatio(),
-    CurrentRatio(),
-    HAlpha(60),
-    HBeta(60),
-    Momentum(20),
-    WeightedMomentum(20),
-    ExpWeightedMomentum(20),
-    LogPrice(),
-    RoeQ(),
-    RoeTTM(),
-    RoaQ(),
-    RoaTTM(),
-    GrossProfitMarginQ(),
-    GrossProfitMarginTTM(),
-    ProfitMarginQ(),
-    ProfitMarginTTM(),
-    AssetTurnoverQ(),
-    AssetTurnoverTTM(),
-    OperationCashflowRatioQ(),
-    OperationCashflowRatioTTM(),
-    Capital(),
-    Macd(),
-    Turnover(20),
-    BiasTurnover(20, 126),
-    Ep(),
-    Epcut(),
-    Bp(),
-    Sp(),
-    Ncfp(),
-    Ocfp(),
-    Dp(),
-    Gpe(),
-    Std(20),
-]
 
 def get_factor_data(factor: FactorBase, date: list):
     date = pq.item2list(date)
@@ -90,5 +41,5 @@ def get_industry_mapping(date: list):
 
 
 if __name__ == "__main__":
-    print(get_industry_mapping(['2022-05-11', '2022-05-12']))
+    print(get_forward_return('20100129', 21))
     

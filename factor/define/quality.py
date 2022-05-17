@@ -82,7 +82,7 @@ class AssetTurnoverQ(FactorQuanlity):
     def calculate(self, date):
         report_period = pq.nearest_report_period(date)[0]
         self.factor = pq.Stock.financial_indicator(report_period, report_period,
-            fields='fa_assetsturn').droplevel(0).fa_assetturnover
+            fields='fa_assetsturn').droplevel(0).fa_assetsturn
 
 class AssetTurnoverTTM(FactorQuanlity):
     def __init__(self):

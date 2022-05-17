@@ -36,10 +36,10 @@ class FactorBase(object):
     def process(self, date):
         grouper = pq.Stock.plate_info(date, date, fields='citi_industry_name1')\
             .citi_industry_name1.droplevel(0)
-        self.factor = self.factor.loc[self.factor.index.intersection(self.stocks)]
         self.factor = self.factor.preprocessor.deextreme(method='mad', grouper=grouper)\
             .preprocessor.standarize(method='zscore', grouper=grouper)\
             .preprocessor.fillna(method='mean', grouper=grouper)
+        self.factor = self.factor.loc[self.factor.index.intersection(self.stocks)]
     
     def modify(self, date):
         self.factor.index = pd.MultiIndex.from_product([[pq.str2time(date)], self.factor.index])
