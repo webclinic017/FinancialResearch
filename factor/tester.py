@@ -58,16 +58,16 @@ factors = [
     Std(20),
 ]
 
-start_date = '20100101'
-end_date = '20220501'
+start_date = '20210101'
+end_date = '20211130'
 benchmark_code = '000300.SH'
-forward_period = 21
+forward_period = 1
 
 trade_dates =  pq.Stock.trade_date(start_date, end_date,
-    fields='trading_month').trading_month.dropna().to_list()
+    fields='trading_date').iloc[:, 0].dropna().to_list()
 forward_date = pq.Stock.nearby_n_trade_date(end_date, forward_period)
 forward_dates = pq.Stock.trade_date(end_date, forward_date,
-    fields='trading_month').trading_month.dropna().to_list()
+    fields='trading_date').iloc[:, 0].dropna().to_list()
 forward_return = get_forward_return(trade_dates + forward_dates, forward_period)
 
 industry_grouper = get_industry_mapping(trade_dates)
