@@ -11,20 +11,20 @@ def get_factor_data(factor: FactorBase, date: list):
         data.append(factor(dt))
     return pd.concat(data, axis=0).astype('float64')
 
-def get_forward_return(date: list, period: str):
+def get_forward_return(date: list, period: int):
     date = pq.item2list(date)
     data = []
     for dt in date:
         dt = pq.str2time(dt)
         print(f'[*] Getting forward return on {dt}')
         next_dt = pq.Stock.nearby_n_trade_date(dt, 1)
-        period_dt = pq.Stock.nearby_n_trade_date(dt, period)
+        period_dt = pq.Stock.nearby_n_trade_date(next_dt, period)
         price_next_dt = pq.Stock.market_daily(next_dt,
             next_dt, fields='adj_open').droplevel(0)
         price_period_dt = pq.Stock.market_daily(period_dt, 
-            period_dt, fields='adj_close').droplevel(0)
-        ret = (price_period_dt.adj_close - 
-            price_next_dt.adj_open) / price_next_dt.adj_open
+            period_dt, fields='adj_open').droplevel(0)
+        ret = (price_period_dt.iloc[:, 0] - 
+            price_next_dt.iloc[:, 0]) / price_next_dt.iloc[:, 0]
         ret.index = pd.MultiIndex.from_product([[dt], ret.index],
             names = ['datetime', 'asset'])
         data.append(ret)
