@@ -4,7 +4,7 @@ import pandas as pd
 from scipy.stats import norm
 
 # --- 需要的数据列表
-relation = pd.read_excel('FinancialRiskRatio/relation.xlsx').dropna()
+relation = pd.read_excel('Researches/FinancialRiskRatio/relation.xlsx').dropna()
 relation_list = set(relation['from'].to_list() + relation['to'].to_list())
 balance_indicator = list(map(lambda x: x.split('.')[1], list(filter(lambda x: x.startswith('balance'), relation_list))))
 income_indicator = list(map(lambda x: x.split('.')[1] , list(filter(lambda x: x.startswith('income'), relation_list))))
@@ -12,11 +12,11 @@ cashflow_indicator = list(map(lambda x: x.split('.')[1], list(filter(lambda x: x
 ttm_indicator = list(map(lambda x: x.split('.')[1], list(filter(lambda x: x.startswith('ttm'), relation_list))))
 
 # --- 读取必要的数据
-industry = pd.read_parquet('FinancialRiskRatio/data.nosync/industry.parquet')
-ttm = pd.read_parquet('FinancialRiskRatio/data.nosync/ttm.parquet')
-balance = pd.read_parquet('FinancialRiskRatio/data.nosync/balance.parquet')
-income = pd.read_parquet('FinancialRiskRatio/data.nosync/income.parquet')
-cashflow = pd.read_parquet('FinancialRiskRatio/data.nosync/cashflow.parquet')
+industry = pd.read_parquet('Researches/FinancialRiskRatio/data.nosync/industry.parquet')
+ttm = pd.read_parquet('Researches/FinancialRiskRatio/data.nosync/ttm.parquet')
+balance = pd.read_parquet('Researches/FinancialRiskRatio/data.nosync/balance.parquet')
+income = pd.read_parquet('Researches/FinancialRiskRatio/data.nosync/income.parquet')
+cashflow = pd.read_parquet('Researches/FinancialRiskRatio/data.nosync/cashflow.parquet')
 
 # --- ttm数据及industry数据需要对交易日进行调整
 ttm = ttm.converter.resample('q').last()
@@ -63,6 +63,10 @@ for i, rel in relation.iterrows():
 
 # 尝试减少数据量
 ratio = ratio[ratio.columns[(ratio.count() / ratio.shape[0]) > 0.5]]
+# 数据清洗
+ratio_processed = ratio.preprocessor.standarize('zscore')\
+    .preprocessor.fillna('mean', grouper=industry.group)\
+    .preprocessor.deextreme('mad')
 
 # --- 滚动窗口计算行业内的财务质量得分
 def calc_unit(data):
@@ -71,8 +75,6 @@ def calc_unit(data):
         res = pd.DataFrame(res, index=_data.index, columns=_data.columns)
         return res.groupby(level=1).last().mean(axis=1)
 
-    # deextreme, normalization
-    data = data.preprocessor.deextreme('md_correct').preprocessor.standarize("zscore")
     # the latest industry infomation
     idx = data.index.get_level_values(0)[-1]
     currect_group = industry.loc[idx].group.to_dict()
@@ -81,7 +83,7 @@ def calc_unit(data):
     score = dev.abs().groupby(level=1).last()
     return score
 
-score = ratio.calculator.rolling(window=30, func=calc_unit)
+score = ratio_processed.calculator.rolling(window=30, func=calc_unit)
 
 # --- 板块分类器
 plate_dict = {
@@ -96,20 +98,25 @@ plate_dict = {
 }
 
 # ---
-# ic = score.describer.ic(net_profit_forward)
+ic = score.describer.ic(net_profit_forward)
 # ic = score.describer.ic(net_profit_forward, grouper=industry.group)
-ic = score.describer.ic(net_profit_forward, grouper=lambda x: plate_dict.get(x[1][:3], 'unknown'))
+# ic = score.describer.ic(net_profit_forward, grouper=lambda x: plate_dict.get(x[1][:3], 'unknown'))
 test_result = ic.tester.sigtest()
-ir = ic.groupby(level=1).mean() / ic.groupby(level=1).std()
+# ir = ic.groupby(level=1).mean() / ic.groupby(level=1).std()
 # ir = ic.mean() / ic.std()
 
 # ---
-plot_asset = '000551.SZ'
-with pq.Gallery(1, 1) as gallery:
-    ax = gallery.axes[0, 0]
-    score.drawer.draw('line', asset=plot_asset, ax=ax, color='g')
-    net_profit_forward.loc[score.index[0]:].drawer.draw('line', 
-        asset=plot_asset, ax=ax.twinx(), style='--')
-    # net_profit_industry.loc[score.index[0]:].drawer.draw('line',
-    #     asset=plot_asset, ax=ax.twinx(), color='r', label='net_profit')
-    ax.legend()
+with pq.Gallery(1, 1, path='Researches/FinancialRiskRatio/image/ic-all.png') as g:
+    ic.drawer.draw('bar', indicator='factor', ax=g.axes[0, 0], title='all_stock', label='corr')
+    ic.rolling(4).mean().drawer.draw('line', indicator='factor', 
+        label='MA_Year', ax=g.axes[0, 0], color='#CC6633')
+    g.axes[0, 0].legend()
+
+# ---
+for plate in ['zb', 'cyb', 'kcb', 'zxb']:
+    with pq.Gallery(1, 1, path=f'Researches/FinancialRiskRatio/image/ic-by-{plate}.png') as g:
+        ic.drawer.draw('bar', asset=f'{plate}', indicator='factor', 
+            ax=g.axes[0, 0], title=f'{plate}', label='corr')
+        ic.groupby(level=1).rolling(4).mean().droplevel(0).sort_index().drawer.draw(
+            'line', asset=f'{plate}', indicator='factor', label='MA_Year', ax=g.axes[0, 0], color='#CC6633')
+        g.axes[0, 0].legend()
