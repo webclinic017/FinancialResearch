@@ -17,56 +17,74 @@ from factor.tools import (
 
 
 factors = [
-    SalesGQ(),
-    ProfitGQ(),
-    OcfGQ(),
-    RoeGQ(),
-    FinancialLeverage(),
-    DebtEquityRatio(),
-    CashRatio(),
-    CurrentRatio(),
-    HAlpha(60),
-    HBeta(60),
-    Momentum(20),
+    # Std(6),
+    # Std(20),
+    # Turnover(6), 
+    Amplitude(20),
+    # BiasTurnover(2, 6),
+    # Momentum(2),
+    # Momentum(6),
+    # Momentum(11),
     WeightedMomentum(20),
-    ExpWeightedMomentum(20),
-    LogPrice(),
-    RoeQ(),
-    RoeTTM(),
-    RoaQ(),
-    RoaTTM(),
-    GrossProfitMarginQ(),
-    GrossProfitMarginTTM(),
-    ProfitMarginQ(),
-    ProfitMarginTTM(),
-    AssetTurnoverQ(),
-    AssetTurnoverTTM(),
-    OperationCashflowRatioQ(),
-    OperationCashflowRatioTTM(),
-    Capital(),
-    Macd(),
-    Turnover(20),
-    BiasTurnover(20, 126),
-    Ep(),
-    Epcut(),
-    Bp(),
-    Sp(),
-    Ncfp(),
-    Ocfp(),
-    Dp(),
-    Gpe(),
-    Std(20),
+    # WeightedMomentum(2),
+    # WeightedMomentum(6),
+    # ExpWeightedMomentum(2),
+    # ExpWeightedMomentum(6),
+    # ExpWeightedMomentum(11),
 ]
+
+# [
+#     SalesGQ(),
+#     ProfitGQ(),
+#     OcfGQ(),
+#     RoeGQ(),
+#     FinancialLeverage(),
+#     DebtEquityRatio(),
+#     CashRatio(),
+#     CurrentRatio(),
+#     HAlpha(60),
+#     HBeta(60),
+#     Momentum(20),
+#     WeightedMomentum(20),
+#     ExpWeightedMomentum(20),
+#     LogPrice(),
+#     RoeQ(),
+#     RoeTTM(),
+#     RoaQ(),
+#     RoaTTM(),
+#     GrossProfitMarginQ(),
+#     GrossProfitMarginTTM(),
+#     ProfitMarginQ(),
+#     ProfitMarginTTM(),
+#     AssetTurnoverQ(),
+#     AssetTurnoverTTM(),
+#     OperationCashflowRatioQ(),
+#     OperationCashflowRatioTTM(),
+#     Capital(),
+#     Macd(),
+#     Turnover(20),
+#     BiasTurnover(20, 126),
+#     Ep(),
+#     Epcut(),
+#     Bp(),
+#     Sp(),
+#     Ncfp(),
+#     Ocfp(),
+#     Dp(),
+#     Gpe(),
+#     Std(20),
+# ]
 
 start_date = '20210101'
 end_date = '20211130'
-benchmark_code = '000300.SH'
+benchmark_code = '000001.SH'
 forward_period = 1
 
 trade_dates =  pq.Stock.trade_date(start_date, end_date,
     fields='trading_date').iloc[:, 0].dropna().to_list()
 forward_date = pq.Stock.nearby_n_trade_date(end_date, forward_period)
-forward_dates = pq.Stock.trade_date(end_date, forward_date,
+forward_next_date = pq.Stock.nearby_n_trade_date(end_date, 1)
+forward_dates = pq.Stock.trade_date(forward_next_date, forward_date,
     fields='trading_date').iloc[:, 0].dropna().to_list()
 forward_return = get_forward_return(trade_dates + forward_dates, forward_period)
 
@@ -91,6 +109,10 @@ for factor in factors:
         barra_reg.drawer.draw('line', asset=str(factor), indicator='t', 
             ax=g.axes[0, 0].twinx(), color='#aa1111', title='barra-regression')
         ic.drawer.draw('bar', ax=g.axes[1, 0])
+        g.axes[1, 0].hlines(y=0.03, xmin=g.axes[1, 0].get_xlim()[0], xmax=g.axes[1, 0].get_xlim()[1],
+            color='#aa1111', linestyles='dashed')
+        g.axes[1, 0].hlines(y=-0.03, xmin=g.axes[1, 0].get_xlim()[0], xmax=g.axes[1, 0].get_xlim()[1],
+            color='#aa1111', linestyles='dashed')
         ic.rolling(12).mean().drawer.draw('line', ax=g.axes[1, 0], 
             color='#1899B3', title='ic-test')
         profit.drawer.draw('bar', ax=g.axes[2, 0])

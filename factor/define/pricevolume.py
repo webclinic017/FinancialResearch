@@ -99,9 +99,26 @@ class LogPrice(FactorPriceVolume):
         self.factor = np.log(price)
 
 
+class Amplitude(FactorPriceVolume):
+    def __init__(self, period):
+        self.period = period
+        name = 'amplitude_' + str(period)
+        super().__init__(name)
+    
+    def calculate(self, date):
+        last_date = pq.Stock.nearby_n_trade_date(date, -self.period + 1)
+        price = pq.Stock.market_daily(last_date, date, 
+            fields=['adj_high', 'adj_low'])
+        vol = price['adj_high'] / price['adj_low']
+        self.factor = vol.groupby(level=1).apply(lambda x:
+            x.droplevel(1).sort_values().iloc[-int(0.25 * self.period):].mean() -
+            x.droplevel(1).sort_values().iloc[:int(0.25 * self.period)].mean()
+        )
+
+
 if __name__ == "__main__":
     import time
-    factor = LogPrice()
+    factor = Amplitude(20)
     start = time.time()
     print(factor('20200106'))
     print(f'time: {time.time() - start:.2f}s')
