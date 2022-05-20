@@ -65,9 +65,14 @@ def factor_analysis(factor: pd.Series, forward_return: pd.Series, grouper: pd.Se
     forward_return: pd.Series, forward return of factor
     grouper: pd.Series, grouper of factor
     benchmark: pd.Series, benchmark of factor
+    ic_grouped: bool, whether to calculate IC in certain groups
     q: int, q-quantile
-    path: str, path to save result, must be excel file
+    commission: float, commission rate
+    commission_type: str, commission type, 'both', 'buy', 'sell'
+    datapath: str, path to save result, must be excel file
     show: bool, whether to show result
+    imagepath: str, path to save image, must be png file
+    savedata: list, data to save, ['reg', 'ic', 'layering', 'turnover']
     '''
     if datapath is not None and not datapath.endswith('.xlsx'):
         raise ValueError('path must be an excel file')

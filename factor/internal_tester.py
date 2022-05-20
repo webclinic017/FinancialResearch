@@ -31,6 +31,6 @@ benchmark = benchmark / benchmark.iloc[0]
 benchmark.name = 'benchmark'
 
 for factor in factors:
-    factor_data = get_factor_data(factor, trade_dates).iloc[:, 0]
+    factor_data = get_factor_data(factor, trade_dates)
     factor_analysis(factor_data, forward_return, industry_grouper, benchmark,
         q=5, datapath=f'result.nosync/table/{factor}.xlsx', imagepath=f'result.nosync/image/{factor}.png')
