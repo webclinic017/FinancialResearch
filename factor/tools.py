@@ -54,10 +54,10 @@ def process_factor(name: str = None, *args, **kwargs):
     return decorate
 
 def factor_analysis(factor: pd.Series, forward_return: pd.Series, grouper: pd.Series,
-    benchmark: pd.Series = None, q: int = 5, 
-    ic_grouped: bool = True, commission: float = 0.001,
+    benchmark: pd.Series = None, ic_grouped: bool = True, q: int = 5, 
+    commission: float = 0.001, commision_type: str = 'both',
     datapath: str = None, show: bool = True, imagepath: str = None, 
-    savedata: list = ['reg', 'ic', 'layering']):
+    savedata: list = ['reg', 'ic', 'layering', 'turnover']):
     '''Factor test pipeline
     ----------------------
 
@@ -72,7 +72,6 @@ def factor_analysis(factor: pd.Series, forward_return: pd.Series, grouper: pd.Se
     if datapath is not None and not datapath.endswith('.xlsx'):
         raise ValueError('path must be an excel file')
     
-    # ---core factor test code---
     # regression test
     reg_data = pd.concat([pd.get_dummies(grouper).iloc[:, 1:], factor], axis=1)
     reg_res = reg_data.regressor.ols(y=forward_return)
@@ -85,7 +84,7 @@ def factor_analysis(factor: pd.Series, forward_return: pd.Series, grouper: pd.Se
     weight = pd.Series(np.ones_like(quantiles), index=quantiles.index)
     profit = weight.groupby(quantiles).apply(lambda x: 
         x.relocator.profit(forward_return)).swaplevel().sort_index()
-    turnover = weight.groupby(quantiles).apply(lambda x: x.relocator.turnover()
+    turnover = weight.groupby(quantiles).apply(lambda x: x.relocator.turnover(side=commision_type)
         ).swaplevel().sort_index()
     turnover_commission = turnover * commission
     profit = profit - turnover_commission
@@ -98,10 +97,11 @@ def factor_analysis(factor: pd.Series, forward_return: pd.Series, grouper: pd.Se
         cumprofit = pd.concat([cumprofit, benchmark_ret], axis=1).dropna()
 
     if show:
-        with pq.Gallery(4, 1, show=show, path=imagepath) as g:
+        with pq.Gallery(5, 1, show=show, path=imagepath) as g:
             latest_data = data.dropna().loc[(data.dropna().index.get_level_values(0)[-1],
                 slice(None)), [data.columns[0], data.columns[-1]]]
-            latest_data.boxplot(by=grouper.name, ax=g.axes[0, 0], whis=(5, 95))
+            latest_data.drawer.draw('boxplot', by=grouper.name, ax=g.axes[0, 0], 
+                whis=(5, 95), datetime=latest_data.index.get_level_values(0)[0])
             g.axes[0, 0].set_title('boxplot on latest date')
             g.axes[0, 0].set_xlabel('')
             reg_res.drawer.draw('bar', asset=factor.name, indicator='coef', ax=g.axes[1, 0])
@@ -116,6 +116,7 @@ def factor_analysis(factor: pd.Series, forward_return: pd.Series, grouper: pd.Se
                 color='#1899B3', title='ic test')
             profit.drawer.draw('bar', ax=g.axes[3, 0])
             cumprofit.drawer.draw('line', ax=g.axes[3, 0].twinx(), title='layering test')
+            turnover.unstack().drawer.draw('line', ax=g.axes[4, 0], title='layering turnover')
 
     if datapath is not None:
         with pd.ExcelWriter(datapath) as writer:
@@ -130,10 +131,14 @@ def factor_analysis(factor: pd.Series, forward_return: pd.Series, grouper: pd.Se
             if 'layering' in savedata:
                 profit_data = pd.concat([profit, cumprofit.stack()], axis=1)
                 profit_data.index.names = ['datetime', 'quantiles']
+                profit_data.columns = ['profit', 'cumprofit']
                 profit_data.reset_index().to_excel(writer, sheet_name='layering-test-result', index=False)
             if 'data' in savedata:
                 data.index.names = ['datetime', 'asset']
                 data.reset_index().to_excel(writer, sheet_name='data', index=False)
+            if 'turnover' in savedata:
+                turnover.index.names = ['datetime', 'quantiles']
+                turnover.reset_index().to_excel(writer, sheet_name='turnover', index=False)
 
 
 if __name__ == "__main__":

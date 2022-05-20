@@ -5,11 +5,10 @@ import pandasquant as pq
 from factor.tools import factor_analysis, process_factor
 
 # ---
-open_price = pq.Stock.market_daily('20210101', '20211204', fields='open')
-forward_return = open_price.groupby(
-    level=1).shift(-1) / open_price.groupby(level=1).shift(-2) - 1
+open_price = pq.Stock.market_daily('20210101', '20211201', fields='open')
+forward_return = open_price.iloc[:, 0].converter.price2fwd(period=1)
 industry = pq.Stock.plate_info(
-    '20210101', '20211204', fields='citi_industry_name1')
+    '20210101', '20211201', fields='citi_industry_name1')
 
 # --- improved momentum
 @process_factor(name='momentum')
@@ -72,5 +71,6 @@ def volume_portion():
 
 # ---
 factor = improved_momentum()
-factor_analysis(factor, forward_return.open, industry.citi_industry_name1, 
-    datapath='result.nosync/factor-test.xlsx', savedata=['reg', 'ic', 'layering', 'data'])
+factor_analysis(factor, forward_return, industry.citi_industry_name1, commission=0.001,
+    datapath='result.nosync/table/factor-test.xlsx', imagepath=f'result.nosync/image/{factor.name}', 
+    savedata=['reg', 'ic', 'layering', 'turnover'])

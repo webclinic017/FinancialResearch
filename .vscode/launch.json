@@ -10,22 +10,22 @@
 			"justMyCode": true
 		},
 		{
-			"name": "database",
+			"name": "factor/external_tester",
 			"type": "python",
 			"request": "launch",
-			"module": "database"
-		},
-		{
-			"name": "factor/tester",
-			"type": "python",
-			"request": "launch",
-			"module": "factor.tester"
+			"module": "factor.external_tester"
 		},
 		{
 			"name": "factor/tools",
 			"type": "python",
 			"request": "launch",
 			"module": "factor.tools"
+		},
+		{
+			"name": "factor/internal_tester",
+			"type": "python",
+			"request": "launch",
+			"module": "factor.internal_tester"
 		},
 		{
 			"name": "factor/define/technical",
