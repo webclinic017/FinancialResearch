@@ -1,5 +1,6 @@
 import pandas as pd
 import pandasquant as pq
+import numpy as np
 from functools import wraps
 from factor.define.base import FactorBase
 
@@ -40,50 +41,109 @@ def get_industry_mapping(date: list):
             fields='citi_industry_name1').citi_industry_name1)
     return pd.concat(data, axis=0)
 
-def process_factor(func: ..., name: str = None, *args, **kwargs):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        factor = func(*args, **kwargs)
-        if isinstance(factor, pd.DataFrame):
-            factor = factor.iloc[:, 0]
-        factor.name = name or 'factor'
-        return factor
-    return wrapper
+def process_factor(name: str = None, *args, **kwargs):
+    def decorate(func):
+        @wraps(func)
+        def wrapper():
+            factor = func(*args, **kwargs)
+            if isinstance(factor, pd.DataFrame):
+                factor = factor.iloc[:, 0]
+            factor.name = name or 'factor'
+            return factor
+        return wrapper
+    return decorate
 
-def factor_test(factor: pd.Series, forward_return: pd.Series, grouper: pd.Series,
-    benchmark: pd.Series = None, q: int = 5, path: str = None, show: bool = True):
+def factor_analysis(factor: pd.Series, forward_return: pd.Series, grouper: pd.Series,
+    benchmark: pd.Series = None, q: int = 5, 
+    ic_grouped: bool = True, commission: float = 0.001,
+    datapath: str = None, show: bool = True, imagepath: str = None, 
+    savedata: list = ['reg', 'ic', 'layering']):
+    '''Factor test pipeline
+    ----------------------
+
+    factor: pd.Series, factor to test
+    forward_return: pd.Series, forward return of factor
+    grouper: pd.Series, grouper of factor
+    benchmark: pd.Series, benchmark of factor
+    q: int, q-quantile
+    path: str, path to save result, must be excel file
+    show: bool, whether to show result
+    '''
+    if datapath is not None and not datapath.endswith('.xlsx'):
+        raise ValueError('path must be an excel file')
+    
+    # ---core factor test code---
+    # regression test
     reg_data = pd.concat([pd.get_dummies(grouper).iloc[:, 1:], factor], axis=1)
     reg_res = reg_data.regressor.ols(y=forward_return)
+    # ic test
     ic = factor.describer.ic(forward_return)
+    if ic_grouped:
+        ic_group = factor.describer.ic(forward_return, grouper=grouper)
+    # layering test
     quantiles = factor.groupby(level=0).apply(pd.qcut, q=q, labels=False) + 1
-    profit = forward_return.relocator.profit(grouper=quantiles)
+    weight = pd.Series(np.ones_like(quantiles), index=quantiles.index)
+    profit = weight.groupby(quantiles).apply(lambda x: 
+        x.relocator.profit(forward_return)).swaplevel().sort_index()
+    turnover = weight.groupby(quantiles).apply(lambda x: x.relocator.turnover()
+        ).swaplevel().sort_index()
+    turnover_commission = turnover * commission
+    profit = profit - turnover_commission
     cumprofit = (profit + 1).groupby(level=1).cumprod().unstack().shift(1).fillna(1)
-    
-    if benchmark is not None:
-        cumprofit = pd.concat([cumprofit, benchmark], axis=1).dropna()
+    # gathering data together
+    data = pd.concat([factor, forward_return, grouper], axis=1)
 
-    if path is not None:
-        with pd.ExcelWriter(path) as writer:
-            reg_res.to_excel(writer, sheet_name='regression-test-result')
-            ic.to_excel(writer, sheet_name='ic-test-result')
-            cumprofit.to_excel(writer, sheet_name='layering-test-result')
-    
+    if benchmark is not None:
+        benchmark_ret = benchmark / benchmark.iloc[0]
+        cumprofit = pd.concat([cumprofit, benchmark_ret], axis=1).dropna()
+
     if show:
-        with pq.Gallery(3, 1, path=f'factor/result.nosync/{factor}.png', show=False) as g:
-            reg_res.drawer.draw('bar', asset=factor.name, indicator='coef', ax=g.axes[0, 0])
-            reg_res.drawer.draw('line', asset=str(factor), indicator='t', 
-                ax=g.axes[0, 0].twinx(), color='#aa1111', title='barra-regression')
-            ic.drawer.draw('bar', ax=g.axes[1, 0])
-            g.axes[1, 0].hlines(y=0.03, xmin=g.axes[1, 0].get_xlim()[0], xmax=g.axes[1, 0].get_xlim()[1],
+        with pq.Gallery(4, 1, show=show, path=imagepath) as g:
+            latest_data = data.dropna().loc[(data.dropna().index.get_level_values(0)[-1],
+                slice(None)), [data.columns[0], data.columns[-1]]]
+            latest_data.boxplot(by=grouper.name, ax=g.axes[0, 0], whis=(5, 95))
+            g.axes[0, 0].set_title('boxplot on latest date')
+            g.axes[0, 0].set_xlabel('')
+            reg_res.drawer.draw('bar', asset=factor.name, indicator='coef', ax=g.axes[1, 0])
+            reg_res.drawer.draw('line', asset=factor.name, indicator='t', 
+                ax=g.axes[1, 0].twinx(), color='#aa1111', title='barra regression')
+            ic.drawer.draw('bar', ax=g.axes[2, 0])
+            g.axes[2, 0].hlines(y=0.03, xmin=g.axes[2, 0].get_xlim()[0], xmax=g.axes[2, 0].get_xlim()[1],
                 color='#aa1111', linestyles='dashed')
-            g.axes[1, 0].hlines(y=-0.03, xmin=g.axes[1, 0].get_xlim()[0], xmax=g.axes[1, 0].get_xlim()[1],
+            g.axes[2, 0].hlines(y=-0.03, xmin=g.axes[2, 0].get_xlim()[0], xmax=g.axes[2, 0].get_xlim()[1],
                 color='#aa1111', linestyles='dashed')
-            ic.rolling(12).mean().drawer.draw('line', ax=g.axes[1, 0], 
-                color='#1899B3', title='ic-test')
-            profit.drawer.draw('bar', ax=g.axes[2, 0])
-            cumprofit.drawer.draw('line', ax=g.axes[2, 0].twinx(), title='layering-test')
+            ic.rolling(12).mean().drawer.draw('line', ax=g.axes[2, 0], 
+                color='#1899B3', title='ic test')
+            profit.drawer.draw('bar', ax=g.axes[3, 0])
+            cumprofit.drawer.draw('line', ax=g.axes[3, 0].twinx(), title='layering test')
+
+    if datapath is not None:
+        with pd.ExcelWriter(datapath) as writer:
+            if 'reg' in savedata:
+                reg_res.index.names = ['datetime', 'x_variables']
+                reg_res.reset_index().to_excel(writer, sheet_name='regression-test-result', index=False)
+            if 'ic' in savedata:
+                ic.name = 'datetime'
+                ic_group.index.names = ['datetime', 'group']
+                ic.reset_index().to_excel(writer, sheet_name='ic-test-result', index=False)
+                ic_group.reset_index().to_excel(writer, sheet_name='ic-group-test-result', index=False)
+            if 'layering' in savedata:
+                profit_data = pd.concat([profit, cumprofit.stack()], axis=1)
+                profit_data.index.names = ['datetime', 'quantiles']
+                profit_data.reset_index().to_excel(writer, sheet_name='layering-test-result', index=False)
+            if 'data' in savedata:
+                data.index.names = ['datetime', 'asset']
+                data.reset_index().to_excel(writer, sheet_name='data', index=False)
 
 
 if __name__ == "__main__":
-    print(get_forward_return('20100129', 21))
-    
+    from factor.define.valuation import Ep
+    open_price = pq.Stock.market_daily('20210101', '20210131', fields='open')
+    forward_return = open_price.groupby(
+        level=1).shift(-1) / open_price.groupby(level=1).shift(-2) - 1
+    industry = pq.Stock.plate_info(
+        '20210101', '20210131', fields='citi_industry_name1')
+    factor_data = get_factor_data(Ep(), pq.Stock.trade_date('20210101', '20210131', 
+        fields='trading_date').trading_date.tolist())
+    factor_analysis(factor_data.ep, forward_return.open, 
+        industry.citi_industry_name1, q=5, ic_grouped=True, commission=0)
