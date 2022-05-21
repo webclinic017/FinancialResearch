@@ -18,9 +18,8 @@ forward_period = 1
 
 trade_dates =  pq.Stock.trade_date(start_date, end_date,
     fields='trading_date').iloc[:, 0].dropna().to_list()
-forward_date = pq.Stock.nearby_n_trade_date(end_date, forward_period)
-forward_next_date = pq.Stock.nearby_n_trade_date(end_date, 1)
-forward_dates = pq.Stock.trade_date(forward_next_date, forward_date,
+forward = pq.Stock.nearby_n_trade_date(end_date, 2 * forward_period)
+forward_dates = pq.Stock.trade_date(end_date, forward,
     fields='trading_date').iloc[:, 0].dropna().to_list()
 forward_return = get_forward_return(trade_dates + forward_dates, forward_period)
 
