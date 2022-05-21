@@ -56,8 +56,8 @@ def process_factor(name: str = None, *args, **kwargs):
 def factor_analysis(factor: pd.Series, forward_return: pd.Series, grouper: pd.Series,
     benchmark: pd.Series = None, ic_grouped: bool = True, q: int = 5, 
     commission: float = 0.001, commision_type: str = 'both',
-    datapath: str = None, show: bool = True, imagepath: str = None, 
-    savedata: list = ['reg', 'ic', 'layering', 'turnover']):
+    datapath: str = None, show: bool = True, savedata: list = ['reg', 'ic', 'layering', 'turnover'],
+    imagepath: str = None, boxplot_period: 'int | str' = -1, scatter_period: 'int | str' = -1):
     '''Factor test pipeline
     ----------------------
 
@@ -71,8 +71,8 @@ def factor_analysis(factor: pd.Series, forward_return: pd.Series, grouper: pd.Se
     commission_type: str, commission type, 'both', 'buy', 'sell'
     datapath: str, path to save result, must be excel file
     show: bool, whether to show result
-    imagepath: str, path to save image, must be png file
     savedata: list, data to save, ['reg', 'ic', 'layering', 'turnover']
+    imagepath: str, path to save image, must be png file
     '''
     if datapath is not None and not datapath.endswith('.xlsx'):
         raise ValueError('path must be an excel file')
@@ -102,26 +102,51 @@ def factor_analysis(factor: pd.Series, forward_return: pd.Series, grouper: pd.Se
         cumprofit = pd.concat([cumprofit, benchmark_ret], axis=1).dropna()
 
     if show:
-        with pq.Gallery(5, 1, show=show, path=imagepath) as g:
-            latest_data = data.dropna().loc[(data.dropna().index.get_level_values(0)[-1],
-                slice(None)), [data.columns[0], data.columns[-1]]]
-            latest_data.drawer.draw('boxplot', by=grouper.name, ax=g.axes[0, 0], 
-                whis=(5, 95), datetime=latest_data.index.get_level_values(0)[0])
+        with pq.Gallery(6, 1, show=show, path=imagepath) as g:
+            cross_section_period = data.dropna().index.get_level_values(0).unique()
+
+            # first boxplot on a given period
+            if isinstance(boxplot_period, int):
+                boxplot_data = data.dropna().loc[(cross_section_period[boxplot_period], 
+                    slice(None)), [factor.name, grouper.name]]
+            elif isinstance(boxplot_period, str):
+                boxplot_data = data.dropna().loc[(boxplot_period, slice(None)),
+                    [factor.name, grouper.name]]   
+            boxplot_data.drawer.draw('boxplot', by=grouper.name, ax=g.axes[0, 0], 
+                whis=(5, 95), datetime=boxplot_data.index.get_level_values(0)[0])
             g.axes[0, 0].set_title('boxplot on latest date')
             g.axes[0, 0].set_xlabel('')
-            reg_res.drawer.draw('bar', asset=factor.name, indicator='coef', ax=g.axes[1, 0])
+
+            # second scatter plot on a given period
+            if isinstance(scatter_period, int):
+                scatter_data = pd.concat([factor, forward_return], axis=1).loc[
+                    (cross_section_period[scatter_period], slice(None)), :]
+            elif isinstance(scatter_period, str):
+                scatter_data = pd.concat([factor, forward_return], axis=1).loc[
+                    (scatter_period, slice(None)), :]
+            scatter_data.drawer.draw('scatter', x=factor.name, y=forward_return.name, 
+                ax=g.axes[1, 0], datetime=scatter_data.index.get_level_values(0)[0], s=1)
+
+            # third regression plot
+            reg_res.drawer.draw('bar', asset=factor.name, indicator='coef', ax=g.axes[2, 0])
             reg_res.drawer.draw('line', asset=factor.name, indicator='t', 
-                ax=g.axes[1, 0].twinx(), color='#aa1111', title='barra regression')
-            ic.drawer.draw('bar', ax=g.axes[2, 0])
-            g.axes[2, 0].hlines(y=0.03, xmin=g.axes[2, 0].get_xlim()[0], xmax=g.axes[2, 0].get_xlim()[1],
-                color='#aa1111', linestyles='dashed')
-            g.axes[2, 0].hlines(y=-0.03, xmin=g.axes[2, 0].get_xlim()[0], xmax=g.axes[2, 0].get_xlim()[1],
-                color='#aa1111', linestyles='dashed')
-            ic.rolling(12).mean().drawer.draw('line', ax=g.axes[2, 0], 
-                color='#1899B3', title='ic test')
-            profit.drawer.draw('bar', ax=g.axes[3, 0])
-            cumprofit.drawer.draw('line', ax=g.axes[3, 0].twinx(), title='layering test')
-            turnover.unstack().drawer.draw('line', ax=g.axes[4, 0], title='layering turnover')
+                ax=g.axes[2, 0].twinx(), color='#aa1111', title='barra regression')
+
+            # fourth IC plot
+            ic.drawer.draw('bar', ax=g.axes[3, 0])
+            g.axes[3, 0].hlines(y=0.03, xmin=g.axes[3, 0].get_xlim()[0], 
+                xmax=g.axes[3, 0].get_xlim()[1], color='#aa1111', linestyles='dashed')
+            g.axes[3, 0].hlines(y=-0.03, xmin=g.axes[3, 0].get_xlim()[0], 
+                xmax=g.axes[3, 0].get_xlim()[1], color='#aa1111', linestyles='dashed')
+            ic.rolling(12).mean().drawer.draw('line', 
+                ax=g.axes[3, 0], color='#1899B3', title='ic test')
+
+            # fifth layering plot
+            profit.drawer.draw('bar', ax=g.axes[4, 0])
+            cumprofit.drawer.draw('line', ax=g.axes[4, 0].twinx(), title='layering test')
+
+            # sixth turnover plot
+            turnover.unstack().drawer.draw('line', ax=g.axes[5, 0], title='layering turnover')
 
     if datapath is not None:
         with pd.ExcelWriter(datapath) as writer:
