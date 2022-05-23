@@ -16,30 +16,33 @@ def get_factor_data(factor: FactorBase, date: list):
 def get_forward_return(start_date, end_date, period: int, freq: str):
     adjust_freq = {'daily':1, 'monthly':21}
     trade_dates =  pq.Stock.trade_date(start_date, end_date,
-    fields='trading_date').iloc[:, 0].dropna().to_list()
-    forward_date = pq.Stock.nearby_n_trade_date(end_date, 2 * period * adjust_freq[freq])
+                fields='trading_date').iloc[:, 0].dropna().to_list()
+    next_date = pq.Stock.nearby_n_trade_date(end_date, 1)
+    forward_date = pq.Stock.nearby_n_trade_date(next_date, period * adjust_freq[freq])
     forward_dates = pq.Stock.trade_date(end_date, forward_date, fields='trading_date').iloc[:, 0].dropna().to_list()
     date = trade_dates + forward_dates
     date = pq.item2list(date)
     date = pd.DataFrame(date, columns=['orignal_date'])
-    date['shift_1'] = date['orignal_date'].shift(-period * adjust_freq[freq])
-    date['shift_2'] = date['orignal_date'].shift(-2*period * adjust_freq[freq])
+    shift_1_day = []
+    for d in date['orignal_date'].to_list():
+        shift_1_day.append(pq.Stock.nearby_n_trade_date(d, 1))
+    date = pd.concat([date, pd.Series(shift_1_day).rename('shift_1_day')], axis=1)
+    date['shift_1_period'] = date['shift_1_day'].shift(-period * adjust_freq[freq])
     date = date.dropna()
     date = date.iloc[[ i for i in range(0, len(date), period * adjust_freq[freq])], :].reset_index(drop=True)
-    # print(date)
     data = []
     for _, row in date.iterrows():
         dt = pq.str2time(row['orignal_date'])
-        price_1_priod = pq.Stock.market_daily(row['shift_1'],
-            row['shift_1'], fields='adj_open').droplevel(0)
-        price_2_priod = pq.Stock.market_daily(row['shift_2'],
-            row['shift_2'], fields='adj_open').droplevel(0)
-        if price_1_priod.empty or price_2_priod.empty:
+        price_buy_date = pq.Stock.market_daily(row['shift_1_day'],
+            row['shift_1_day'], fields='adj_open').droplevel(0)
+        price_sell_date = pq.Stock.market_daily(row['shift_1_period'],
+            row['shift_1_period'], fields='adj_open').droplevel(0)
+        if price_buy_date.empty or price_sell_date.empty:
             print(f'[!] Cannot get forward return on {dt}')
             break
         else:
             print(f'[*] Getting forward return on {dt}')
-        ret = price_2_priod.iloc[:, 0] / price_1_priod.iloc[:, 0] - 1
+        ret = price_sell_date.iloc[:, 0] / price_buy_date.iloc[:, 0] - 1
         ret.index = pd.MultiIndex.from_product([[row['orignal_date']], ret.index],
             names = ['datetime', 'asset'])
         data.append(ret)
