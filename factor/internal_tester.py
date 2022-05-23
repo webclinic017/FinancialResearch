@@ -11,17 +11,20 @@ from factor.tools import (
 factors = [Momentum(20)]
 plt.rcParams['font.family'] = ['Songti SC']
 
-start_date = '20210101'
-end_date = '20211130'
-benchmark_code = '000001.SH'
-forward_period = 1
 
-trade_dates =  pq.Stock.trade_date(start_date, end_date,
-    fields='trading_date').iloc[:, 0].dropna().to_list()
-forward = pq.Stock.nearby_n_trade_date(end_date, 2 * forward_period)
-forward_dates = pq.Stock.trade_date(end_date, forward,
-    fields='trading_date').iloc[:, 0].dropna().to_list()
-forward_return = get_forward_return(trade_dates + forward_dates, forward_period)
+start_date = '20210101'
+end_date = '20211230'
+benchmark_code = '000001.SH'
+"""解释: 调仓频率由forward_period和freq共同决定。
+   例如forward_period = 1, freq = 'monthly'; 调仓频率为一个月
+   例如forward_period = 2, freq = 'monthly'; 调仓频率为两个月
+   例如forward_period = 1, freq = 'daily'; 调仓频率为一日
+   例如forward_period = 5, freq = 'daily'; 调仓频率为一周
+"""
+forward_period = 1
+freq = 'monthly' # support daily or monthly
+
+forward_return, trade_dates = get_forward_return(start_date, end_date, forward_period, freq)
 
 industry_grouper = get_industry_mapping(trade_dates)
 benchmark = pq.Stock.index_market_daily(code=benchmark_code, start=trade_dates[0], 

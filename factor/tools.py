@@ -13,25 +13,39 @@ def get_factor_data(factor: FactorBase, date: list):
         data.append(factor(dt))
     return pd.concat(data, axis=0).astype('float64')
 
-def get_forward_return(date: list, period: int):
+def get_forward_return(start_date, end_date, period: int, freq: str):
+    adjust_freq = {'daily':1, 'monthly':21}
+    trade_dates =  pq.Stock.trade_date(start_date, end_date,
+    fields='trading_date').iloc[:, 0].dropna().to_list()
+    forward_date = pq.Stock.nearby_n_trade_date(end_date, 2 * period * adjust_freq[freq])
+    forward_dates = pq.Stock.trade_date(end_date, forward_date, fields='trading_date').iloc[:, 0].dropna().to_list()
+    date = trade_dates + forward_dates
     date = pq.item2list(date)
     date = pd.DataFrame(date, columns=['orignal_date'])
-    date['shift_1'] = date['orignal_date'].shift(-period)
-    date['shift_2'] = date['orignal_date'].shift(-2*period)
+    date['shift_1'] = date['orignal_date'].shift(-period * adjust_freq[freq])
+    date['shift_2'] = date['orignal_date'].shift(-2*period * adjust_freq[freq])
     date = date.dropna()
+    date = date.iloc[[ i for i in range(0, len(date), period * adjust_freq[freq])], :].reset_index(drop=True)
+    # print(date)
     data = []
     for _, row in date.iterrows():
         dt = pq.str2time(row['orignal_date'])
-        print(f'[*] Getting forward return on {dt}')
         price_1_priod = pq.Stock.market_daily(row['shift_1'],
             row['shift_1'], fields='adj_open').droplevel(0)
         price_2_priod = pq.Stock.market_daily(row['shift_2'],
             row['shift_2'], fields='adj_open').droplevel(0)
+        if price_1_priod.empty or price_2_priod.empty:
+            print(f'[!] Cannot get forward return on {dt}')
+            break
+        else:
+            print(f'[*] Getting forward return on {dt}')
         ret = price_2_priod.iloc[:, 0] / price_1_priod.iloc[:, 0] - 1
         ret.index = pd.MultiIndex.from_product([[row['orignal_date']], ret.index],
             names = ['datetime', 'asset'])
         data.append(ret)
-    return pd.concat(data, axis=0).astype('float64')
+    data = pd.concat(data, axis=0).astype('float64')
+    trade_dates = data.index.get_level_values(0).drop_duplicates().to_list()
+    return data, trade_dates
 
 def get_industry_mapping(date: list):
     date = pq.item2list(date)
@@ -86,7 +100,7 @@ def factor_analysis(factor: pd.Series, forward_return: pd.Series,
     reg_res = reg_data.regressor.ols(y=forward_return)
     # ic test
     ic = factor.describer.ic(forward_return)
-    if grouper:
+    if grouper is not None:
         ic_group = factor.describer.ic(forward_return, grouper=grouper)
     # layering test
     quantiles = factor.groupby(level=0).apply(pd.qcut, q=q, labels=False) + 1
@@ -159,7 +173,7 @@ def factor_analysis(factor: pd.Series, forward_return: pd.Series,
                 reg_res.reset_index().to_excel(writer, sheet_name='regression-test-result', index=False)
             if 'ic' in savedata:
                 ic.name = 'datetime'
-                if grouper:
+                if grouper is not None:
                     ic_group.index.names = ['datetime', 'group']
                     ic_group.reset_index().to_excel(writer, sheet_name='ic-group-test-result', index=False)
                 ic.reset_index().to_excel(writer, sheet_name='ic-test-result', index=False)
@@ -187,3 +201,6 @@ if __name__ == "__main__":
         fields='trading_date').trading_date.tolist())
     factor_analysis(factor_data.ep, forward_return.open, 
         industry.citi_industry_name1, q=5, ic_grouped=True, commission=0)
+    # price_1_priod = pq.Stock.market_daily('2023-01-04',
+    #         '2023-01-04', fields='adj_open').droplevel(0)
+    # print(price_1_priod)
