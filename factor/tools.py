@@ -86,7 +86,7 @@ def factor_analysis(factor: pd.Series, forward_return: pd.Series,
     reg_res = reg_data.regressor.ols(y=forward_return)
     # ic test
     ic = factor.describer.ic(forward_return)
-    if grouper:
+    if grouper is not None:
         ic_group = factor.describer.ic(forward_return, grouper=grouper)
     # layering test
     quantiles = factor.groupby(level=0).apply(pd.qcut, q=q, labels=False) + 1
@@ -159,7 +159,7 @@ def factor_analysis(factor: pd.Series, forward_return: pd.Series,
                 reg_res.reset_index().to_excel(writer, sheet_name='regression-test-result', index=False)
             if 'ic' in savedata:
                 ic.name = 'datetime'
-                if grouper:
+                if grouper is not None:
                     ic_group.index.names = ['datetime', 'group']
                     ic_group.reset_index().to_excel(writer, sheet_name='ic-group-test-result', index=False)
                 ic.reset_index().to_excel(writer, sheet_name='ic-test-result', index=False)
