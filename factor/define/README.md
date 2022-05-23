@@ -1,18 +1,20 @@
+@import "../../data.nosync/latex.css"
+
 # 因子定义
 
 每一个python脚本都是对某一个大类因子的定义，将不同的细分因子在对应大类因子中实现
 
 ## 因子描述
 
-| 因子名称 | 因子大类 | 因子定义 |
-|:---:|:---:|:---:|
-| Return | pricevolume | 股票收益率 |
-| Turnover | turnover | 换手率 |
-| Volatility | volatility | 波动率 |
-| Ar | pricevolume | 过去周期内股票的 `(最高价-开盘价)/(开盘价-最低价)` 之和 |
-| Br | pricevolume | 过去周期内股票每日`max(0, 最高价 - 昨日收盘价)之和 / max(0, 昨日收盘价 - 最低价)`之和 |
-| Bias | pricevolume | `(昨日收盘价 - 股票过去周期内的收盘价移动平均) / 股票过去周期内的收盘价移动平均` |
-| Davol | pricevolume | `股票短时间内的换手率移动平均 / 股票长周期内换手率的移动平均` |
+| 因子名称 | 因子大类 | 因子定义 | 因子方向 |
+|:---:|:---:|:---:|:---:|
+| Return | pricevolume | 股票收益率 | - |
+| Turnover | turnover | 换手率 | - |
+| Volatility | volatility | 波动率 | - |
+| Ar | pricevolume | 过去周期内股票的 `(最高价-开盘价)/(开盘价-最低价)` 之和 | - |
+| Br | pricevolume | 过去周期内股票每日`max(0, 最高价 - 昨日收盘价)之和 / max(0, 昨日收盘价 - 最低价)`之和 | - |
+| Bias | pricevolume | `(昨日收盘价 - 股票过去周期内的收盘价移动平均) / 股票过去周期内的收盘价移动平均` | - |
+| Davol | pricevolume | `股票短时间内的换手率移动平均 / 股票长周期内换手率的移动平均` | - |
 
 ## 注意事项
 

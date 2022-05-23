@@ -53,8 +53,8 @@ def process_factor(name: str = None, *args, **kwargs):
         return wrapper
     return decorate
 
-def factor_analysis(factor: pd.Series, forward_return: pd.Series, grouper: pd.Series,
-    benchmark: pd.Series = None, ic_grouped: bool = True, q: int = 5, 
+def factor_analysis(factor: pd.Series, forward_return: pd.Series, 
+    grouper: pd.Series = None, benchmark: pd.Series = None, q: int = 5, 
     commission: float = 0.001, commision_type: str = 'both',
     datapath: str = None, show: bool = True, savedata: list = ['reg', 'ic', 'layering', 'turnover'],
     imagepath: str = None, boxplot_period: 'int | str' = -1, scatter_period: 'int | str' = -1):
@@ -78,11 +78,14 @@ def factor_analysis(factor: pd.Series, forward_return: pd.Series, grouper: pd.Se
         raise ValueError('path must be an excel file')
     
     # regression test
-    reg_data = pd.concat([pd.get_dummies(grouper).iloc[:, 1:], factor], axis=1)
+    if grouper is not None:
+        reg_data = pd.concat([pd.get_dummies(grouper).iloc[:, 1:], factor], axis=1)
+    else:
+        reg_data = factor
     reg_res = reg_data.regressor.ols(y=forward_return)
     # ic test
     ic = factor.describer.ic(forward_return)
-    if ic_grouped:
+    if grouper:
         ic_group = factor.describer.ic(forward_return, grouper=grouper)
     # layering test
     quantiles = factor.groupby(level=0).apply(pd.qcut, q=q, labels=False) + 1
@@ -155,9 +158,10 @@ def factor_analysis(factor: pd.Series, forward_return: pd.Series, grouper: pd.Se
                 reg_res.reset_index().to_excel(writer, sheet_name='regression-test-result', index=False)
             if 'ic' in savedata:
                 ic.name = 'datetime'
-                ic_group.index.names = ['datetime', 'group']
+                if grouper:
+                    ic_group.index.names = ['datetime', 'group']
+                    ic_group.reset_index().to_excel(writer, sheet_name='ic-group-test-result', index=False)
                 ic.reset_index().to_excel(writer, sheet_name='ic-test-result', index=False)
-                ic_group.reset_index().to_excel(writer, sheet_name='ic-group-test-result', index=False)
             if 'layering' in savedata:
                 profit_data = pd.concat([profit, cumprofit.stack()], axis=1)
                 profit_data.index.names = ['datetime', 'quantiles']
