@@ -15,19 +15,20 @@ def get_factor_data(factor: FactorBase, date: list):
 
 def get_forward_return(date: list, period: int):
     date = pq.item2list(date)
+    date = pd.DataFrame(date, columns=['orignal_date'])
+    date['shift_1'] = date['orignal_date'].shift(-period)
+    date['shift_2'] = date['orignal_date'].shift(-2*period)
+    date = date.dropna()
     data = []
-    for dt in date:
-        dt = pq.str2time(dt)
+    for _, row in date.iterrows():
+        dt = pq.str2time(row['orignal_date'])
         print(f'[*] Getting forward return on {dt}')
-        next_dt = pq.Stock.nearby_n_trade_date(dt, 1)
-        period_dt = pq.Stock.nearby_n_trade_date(next_dt, period)
-        price_next_dt = pq.Stock.market_daily(next_dt,
-            next_dt, fields='adj_open').droplevel(0)
-        price_period_dt = pq.Stock.market_daily(period_dt, 
-            period_dt, fields='adj_open').droplevel(0)
-        ret = (price_period_dt.iloc[:, 0] - 
-            price_next_dt.iloc[:, 0]) / price_next_dt.iloc[:, 0]
-        ret.index = pd.MultiIndex.from_product([[dt], ret.index],
+        price_1_priod = pq.Stock.market_daily(row['shift_1'],
+            row['shift_1'], fields='adj_open').droplevel(0)
+        price_2_priod = pq.Stock.market_daily(row['shift_2'],
+            row['shift_2'], fields='adj_open').droplevel(0)
+        ret = price_2_priod.iloc[:, 0] / price_1_priod.iloc[:, 0] - 1
+        ret.index = pd.MultiIndex.from_product([[row['orignal_date']], ret.index],
             names = ['datetime', 'asset'])
         data.append(ret)
     return pd.concat(data, axis=0).astype('float64')
