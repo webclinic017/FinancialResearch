@@ -2,7 +2,7 @@ from factor.define.pricevolume import Momentum
 import pandasquant as pq
 import matplotlib.pyplot as plt
 from factor.tools import (
-    factor_analysis,
+    PureFactorAnalysis,
     get_factor_data, 
     get_forward_return, 
     get_industry_mapping)
@@ -32,7 +32,14 @@ benchmark = pq.Stock.index_market_daily(code=benchmark_code, start=trade_dates[0
 benchmark = benchmark / benchmark.iloc[0]
 benchmark.name = 'benchmark'
 
+# for factor in factors:
+#     factor_data = get_factor_data(factor, trade_dates)
+#     factor_analysis(factor_data, forward_return, industry_grouper, benchmark,
+#         q=5, datapath=f'result.nosync/table/{factor}.xlsx', imagepath=f'result.nosync/image/{factor}.png')
+
 for factor in factors:
-    factor_data = get_factor_data(factor, trade_dates)
-    factor_analysis(factor_data, forward_return, industry_grouper, benchmark,
-        q=5, datapath=f'result.nosync/table/{factor}.xlsx', imagepath=f'result.nosync/image/{factor}.png')
+    pure_factor_data = get_factor_data(factor, trade_dates)
+    PureFactorAnalysis(pure_factor_data, forward_return, 
+                    datapath=f'result.nosync/table/{factor}.xlsx',
+                    imagepath=f'result.nosync/image/{factor}.png'
+                    )(benchmark=benchmark, grouper=industry_grouper)
