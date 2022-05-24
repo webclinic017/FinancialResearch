@@ -12,8 +12,8 @@ factors = [Momentum(20)]
 plt.rcParams['font.family'] = ['Songti SC']
 
 
-start_date = '20210101'
-end_date = '20211230'
+start_date = '20190101'
+end_date = '20191230'
 benchmark_code = '000001.SH'
 """解释: 调仓频率由forward_period和freq共同决定。
    例如forward_period = 1, freq = 'monthly'; 调仓频率为一个月

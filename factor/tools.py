@@ -257,7 +257,9 @@ class PureFactorAnalysis(object):
             
         # how to draw
         if grouper is not None:
-            pass
+            groupers = [pd.Grouper(level=1)]
+            ic = ic.groupby(groupers).mean()
+            ic.drawer.draw('bar', ax=canvas)
         else:
             ic.drawer.draw('bar', ax=canvas)
             canvas.hlines(y=0.03, xmin=canvas.get_xlim()[0], 
@@ -269,9 +271,8 @@ class PureFactorAnalysis(object):
             
         # how to save
         if writer is not None:
-            ic.name = 'datetime'
             if grouper is not None:
-                ic.index.names = ['datetime', 'group']
+                ic.index.names = ['group']
                 ic.reset_index().to_excel(writer, sheet_name='ic-group-test-result', index=False)
             else:
                 ic.reset_index().to_excel(writer, sheet_name='ic-test-result', index=False)
@@ -325,7 +326,7 @@ class PureFactorAnalysis(object):
             scatter_data = pd.concat([self.factor_data, self.forward_return], axis=1).loc[
                 (cross_section_period[scatter_period], slice(None)), :]
         elif isinstance(scatter_period, str):
-            scatter_data = pd.concat([self.factor_data, forward_return], axis=1).loc[
+            scatter_data = pd.concat([self.factor_data, self.forward_return], axis=1).loc[
                 (scatter_period, slice(None)), :]
         scatter_data.drawer.draw('scatter', x=self.factor_data.name, y=self.forward_return.name, 
             ax=canvas, datetime=scatter_data.index.get_level_values(0)[0], s=1)
@@ -336,7 +337,7 @@ class PureFactorAnalysis(object):
         else:
             draw_number = 4
         with(
-                pq.Gallery(draw_number, 1, show=self.show, path=self.imagepath) as g,
+                pq.Gallery(draw_number, 1, show=self.show, path=self.imagepath, grouper=grouper) as g,
                 pd.ExcelWriter(self.datapath) as w
             ):
             self.barra_test(g.axes[0,0],w, grouper=grouper)
@@ -351,16 +352,17 @@ class PureFactorAnalysis(object):
     
 
 if __name__ == "__main__":
-    from factor.define.valuation import Ep
-    open_price = pq.Stock.market_daily('20210101', '20210131', fields='open')
-    forward_return = open_price.groupby(
-        level=1).shift(-1) / open_price.groupby(level=1).shift(-2) - 1
-    industry = pq.Stock.plate_info(
-        '20210101', '20210131', fields='citi_industry_name1')
-    factor_data = get_factor_data(Ep(), pq.Stock.trade_date('20210101', '20210131', 
-        fields='trading_date').trading_date.tolist())
-    factor_analysis(factor_data.ep, forward_return.open, 
-        industry.citi_industry_name1, q=5, ic_grouped=True, commission=0)
+    pass
+    # from factor.define.valuation import Ep
+    # open_price = pq.Stock.market_daily('20210101', '20210131', fields='open')
+    # forward_return = open_price.groupby(
+    #     level=1).shift(-1) / open_price.groupby(level=1).shift(-2) - 1
+    # industry = pq.Stock.plate_info(
+    #     '20210101', '20210131', fields='citi_industry_name1')
+    # factor_data = get_factor_data(Ep(), pq.Stock.trade_date('20210101', '20210131', 
+    #     fields='trading_date').trading_date.tolist())
+    # factor_analysis(factor_data.ep, forward_return.open, 
+    #     industry.citi_industry_name1, q=5, ic_grouped=True, commission=0)
     # price_1_priod = pq.Stock.market_daily('2023-01-04',
     #         '2023-01-04', fields='adj_open').droplevel(0)
     # print(price_1_priod)
