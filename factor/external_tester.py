@@ -2,13 +2,13 @@
 import pandas as pd
 import numpy as np
 import pandasquant as pq
-from factor.tools import factor_analysis, process_factor
+from factor.tools import single_factor_analysis, process_factor
 
 # ---
-open_price = pq.Stock.market_daily('20210101', '20211201', fields='open')
+open_price = pq.Api.market_daily('20210101', '20211201', fields='n_open')
 forward_return = open_price.iloc[:, 0].converter.price2fwd(period=1)
-industry = pq.Stock.plate_info(
-    '20210101', '20211201', fields='citi_industry_name1')
+industry = pq.Api.plate_info(
+    '20210101', '20211201', fields='c_citiIndustryName1')
 
 # --- improved momentum
 @process_factor(name='momentum')
@@ -71,6 +71,5 @@ def volume_portion():
 
 # ---
 factor = improved_momentum()
-factor_analysis(factor, forward_return, industry.citi_industry_name1, commission=0.001,
-    datapath='result.nosync/table/factor-test.xlsx', imagepath=f'result.nosync/image/{factor.name}', 
-    savedata=['reg', 'ic', 'layering', 'turnover'])
+single_factor_analysis(factor, forward_return, industry, commission=0.001,
+    data_path='result.nosync/table/factor-test.xlsx', image_path=f'result.nosync/image/{factor.name}')
