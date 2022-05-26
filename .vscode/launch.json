@@ -94,6 +94,12 @@
 			"module": "factor.define.base"
 		},
 		{
+			"name": "viewer/stock",
+			"type": "python",
+			"request": "launch",
+			"module": "viewer.stock"
+		},
+		{
 			"name": "HtMachineLearning/01/01",
 			"type": "python",
 			"request": "launch",
@@ -190,16 +196,16 @@
 			"module": "pandasquant.staff.crawler"
 		},
 		{
-			"name": "pandasquant/.vscode/settings",
-			"type": "python",
-			"request": "launch",
-			"module": "pandasquant..vscode.settings"
-		},
-		{
 			"name": "scripts/test",
 			"type": "python",
 			"request": "launch",
 			"module": "scripts.test"
+		},
+		{
+			"name": "strategy/script",
+			"type": "python",
+			"request": "launch",
+			"module": "strategy.script"
 		},
 		{
 			"name": "Researches/SwQuandrant/run",
@@ -212,6 +218,12 @@
 			"type": "python",
 			"request": "launch",
 			"module": "Researches.FinancialRiskRatio.research"
+		},
+		{
+			"name": "Researches/FinancialRiskRatio/research2",
+			"type": "python",
+			"request": "launch",
+			"module": "Researches.FinancialRiskRatio.research2"
 		},
 		{
 			"name": "Researches/AbsorbRatio/compcontrib",
