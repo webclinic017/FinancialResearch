@@ -89,7 +89,7 @@ def single_factor_analysis(factor_data: pd.Series, forward_return: pd.Series,
                            image_path: str = None, show: bool = True):
     plt.rcParams['font.family'] = ['Songti SC']
     data_writer = pd.ExcelWriter(data_path) if data_path is not None else None
-    with pq.Gallery(7, 1, show=show, path=image_path) as g:
+    with pq.Gallery(7, 1, show=show, path=image_path, xaxis_keep_mask=[1, 0, 0, 0, 0, 0, 0]) as g:
         cross_section_test(factor_data, forward_return, grouper, 
                            plot_period=plot_period, data_writer=data_writer, 
                            boxplot_ax=g.axes[0, 0], scatter_ax=g.axes[1, 0], 
@@ -131,12 +131,13 @@ def cross_section_test(factor_data: pd.Series, forward_return: pd.Series,
     if hist_ax is not None:
         if grouper is not None:
             for group in grouper.dropna().unique():
-                concated_data.loc[plot_period].loc[(concated_data[grouper.name] == group).loc[plot_period], 
-                    factor_data.name].drawer.draw('hist', ax=hist_ax, label=group, indicator=factor_data.name)
+                concated_data.loc[plot_period].\
+                    loc[(concated_data[grouper.name] == group).loc[plot_period], factor_data.name].\
+                    drawer.draw('hist', bins=80, ax=hist_ax, label=group, indicator=factor_data.name, alpha=0.7)
                 hist_ax.legend()
         else:
-            concated_data[plot_period].drawer.draw(
-                'hist', ax=hist_ax, indicator=factor_data.name, bins=80)
+            concated_data[plot_period].drawer.draw('hist', ax=hist_ax, 
+                indicator=factor_data.name, bins=80, alpha=0.7)
 
 
 def barra_test(factor_data: pd.Series, forward_return: pd.Series,
