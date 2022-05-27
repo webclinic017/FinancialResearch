@@ -6,6 +6,9 @@ import pandas as pd
 from matplotlib import pyplot as plt
 
 
+style = mpl.make_mpf_style(marketcolors=mpl.make_marketcolors(up="r", down="g",inherit=True),
+    gridcolor="gray", gridstyle="--", gridaxis="both")  
+
 def parse_args():
     parser = argparse.ArgumentParser(description='Plot stock data.')
     parser.add_argument('-c', '--code', type=str, 
@@ -16,8 +19,8 @@ def parse_args():
     parser.add_argument('-e', '--end', type=str, 
         default=datetime.datetime.today().strftime(r'%Y-%m-%d'),
         help='End date, format: YYYY-MM-DD, default to today')
-    parser.add_argument('-p', '--path', type=str, default='result.nosync/today.png',
-        help='Path to save the plot, default: result.nosync/today.png')
+    parser.add_argument('-p', '--path', type=str, default='result.nosync/image/today.png',
+        help='Path to save the plot, default: result.nosync/image/today.png')
     parser.add_argument('--figsize', type=str, default='24,8.4',
         help='Figure size, format: W,H, default: 24,8.4')
     parser.add_argument('--show', type=bool, default=True,
@@ -25,6 +28,11 @@ def parse_args():
     args = parser.parse_args()
     return args
 
+def get_data(code: str, start: str, end: str):
+    return pq.Api.market_daily(start=start, end=end, 
+        fields=['n_open', 'n_high', 'n_low', 'n_close', 'n_volume'], 
+        conditions='c_windCode=%s' % code).rename(columns=
+        lambda x: pq.hump2snake(x.split('.')[-1])).droplevel(1) 
 
 def calculate(data: pd.DataFrame):
     ma5 = data['close'].rolling(5).mean()
@@ -41,8 +49,7 @@ def calculate(data: pd.DataFrame):
         "BBTop": bolltop,
         "BBBot": bollbot,
         "ATR": atr,
-    }
-
+        }
 
 def addplots(indicators: dict):
     return [
@@ -56,9 +63,7 @@ def addplots(indicators: dict):
         {},
         {
             "ATR": mpl.make_addplot(indicators['ATR'], panel=2),
-        }
-    ]
-
+        },]
 
 def config(addplot: list[dict]):
     aplt = [ap.values() if ap else [] for ap in addplot]
@@ -66,7 +71,6 @@ def config(addplot: list[dict]):
     for ap in aplt:
         addplots += ap
     return addplots
-
 
 def plot(code: str, data: pd.DataFrame, addplot: list[dict], addplot_: list,
     figsize: list[float], path: str, show: bool):
@@ -86,7 +90,6 @@ def plot(code: str, data: pd.DataFrame, addplot: list[dict], addplot_: list,
     if show:
         plt.show()
 
-
 if __name__ == "__main__":
     args = parse_args()
     code = args.code
@@ -96,15 +99,7 @@ if __name__ == "__main__":
     figsize = tuple(map(float, args.figsize.split(',')))
     show = args.show
 
-    style = mpl.make_mpf_style(marketcolors=mpl.make_marketcolors(up="r", down="g",inherit=True),
-                            gridcolor="gray", gridstyle="--", gridaxis="both")  
-
-    data = pq.Api.market_daily(start=start, end=end, 
-        fields=['n_open', 'n_high', 'n_low', 'n_close', 'n_volume'], 
-        conditions='c_windCode=%s' % code).rename(columns=
-        lambda x: pq.hump2snake(x.split('.')[-1])).droplevel(1) 
-
-
+    data = get_data(code, start, end)
     indicators = calculate(data)
     addplot = addplots(indicators)
     addplot_ = config(addplot)
