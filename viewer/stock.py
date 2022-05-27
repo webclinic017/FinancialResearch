@@ -21,8 +21,8 @@ def parse_args():
         help='End date, format: YYYY-MM-DD, default to today')
     parser.add_argument('-p', '--path', type=str, default='result.nosync/image/today.png',
         help='Path to save the plot, default: result.nosync/image/today.png')
-    parser.add_argument('--figsize', type=str, default='24,8.4',
-        help='Figure size, format: W,H, default: 24,8.4')
+    parser.add_argument('--figsize', type=str, default='7,5',
+        help='Figure size, format: W,H, default: 7,5')
     parser.add_argument('--show', type=bool, default=True,
         help='Whether to show the plot, default: True')
     args = parser.parse_args()
@@ -75,11 +75,11 @@ def config(addplot: list[dict]):
 def plot(code: str, data: pd.DataFrame, addplot: list[dict], addplot_: list,
     figsize: list[float], path: str, show: bool):
     fig, axes = mpl.plot(data, addplot=addplot_, figsize=figsize, title=code, 
-        returnfig=True, style=style, type='candle', volume=True)
+        returnfig=True, style=style, type='candle', volume=True, tight_layout=True)
 
     for i, ax in enumerate(axes[::2]):
         if i == 0:
-            extra_line = 2
+            extra_line = 1
         else:
             extra_line = 0
         ax.legend([None] * (len(addplot[i]) + extra_line))
