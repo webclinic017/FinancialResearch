@@ -6,6 +6,79 @@ from functools import wraps
 from factor.define.base import FactorBase
 
 
+class Factor:
+    def __init__(self, name: str,
+                 pool: 'str | list | pd.Index | pd.MultiIndex' = None,
+                 deextreme: str = 'mad',
+                 standardize: str = 'zscore',
+                 fillna: str = 'mean',
+                 grouper = None,
+                 *args, **kwargs):
+        self.name = name
+        self.pool = pool
+        self.deextreme = deextreme
+        self.standardize = standardize
+        self.fillna = fillna
+        self.grouper = grouper
+        self.args = args
+        self.kwargs = kwargs
+
+    def filter_pool(self) -> 'pd.Series | pd.DataFrame':
+        if self.pool is None:
+            return self.factor
+               
+        elif isinstance(self.pool, str):
+            stocks = pq.Api.index_weight(start = self.factor.index.levels[0][0], 
+                end=self.factor.index.levels[0][1], 
+                conditions=f'c_indexCode={self.pool}')
+            stocks = stocks.index.intersection(self.factor.index)
+            return self.factor.loc[stocks.index]
+        
+        elif isinstance(self.pool, pd.MultiIndex):
+            stocks = self.pool.index.intersection(self.factor.index)
+            return self.factor.loc[stocks]
+
+        elif isinstance(self.pool, pd.Index):
+            stocks = self.pool.index.intersection(self.factor.index.levels[1])
+            return self.factor.loc[stocks]
+        
+        elif isinstance(self.pool, list):
+            stocks = pd.Index(stocks)
+            stocks = stocks.index.intersection(self.factor.index.levvels[1])
+            return self.factor.loc[stocks]
+    
+    def preprocess(self):
+        factor = self.factor.preprocessor.deextreme(self.deextreme, self.grouper)
+        factor = factor.preprocessor.standarize(self.standardize, self.grouper)
+        factor = factor.preprocessor.fillna(self.fillna, self.grouper)
+        return factor
+    
+    def postprocess(self):
+        if isinstance(self.factor, pd.DataFrame) and isinstance(self.factor.index, pd.MultiIndex):
+            if self.factor.columns.size != 1:
+                raise ValueError('factor must be a single columned dataframe')
+            factor = self.factor.iloc[:, 0]
+        
+        elif isinstance(self.factor, pd.DataFrame) and isinstance(self.factor.index, pd.DatetimeIndex):
+            factor = self.factor.stack()
+        
+        elif isinstance(self.factor, pd.Series):
+            factor = self.factor
+
+        factor.index.names = ['datetime', 'asset']
+        return factor
+    
+    def __call__(self, func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            self.factor = func(*args, **kwargs)
+            self.factor = self.preprocess()
+            self.factor = self.filter_pool()
+            self.factor = self.postprocess()
+            return self.factor
+        return wrapper
+
+
 def get_factor_data(factor: FactorBase, date: list):
     date = pq.item2list(date)
     data = []
@@ -65,18 +138,6 @@ def get_industry_mapping(date: list):
         data.append(pq.Stock.plate_info(dt, dt,
                                         fields='citi_industry_name1').citi_industry_name1)
     return pd.concat(data, axis=0)
-
-def process_factor(name: str = None):
-    def decorate(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            factor = func(*args, **kwargs)
-            if isinstance(factor, pd.DataFrame):
-                factor = factor.iloc[:, 0]
-            factor.name = name or 'factor'
-            return factor
-        return wrapper
-    return decorate
 
 def single_factor_analysis(factor_data: pd.Series, forward_return: pd.Series,
                            grouper: pd.Series = None, benchmark: pd.Series = None,

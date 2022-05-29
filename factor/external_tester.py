@@ -2,10 +2,10 @@ import datetime
 import pandas as pd
 import numpy as np
 import pandasquant as pq
-from factor.tools import single_factor_analysis, process_factor
+from factor.tools import Factor, single_factor_analysis
 
 
-@process_factor(name='pvcorr')
+@Factor(name='pvcorr')
 def pvcorr(price, period):
     vwap = price.amount / price.volume
     vwap.name = 'vwap'
@@ -16,7 +16,7 @@ def pvcorr(price, period):
 
 if __name__ == "__main__":
     today = datetime.datetime.today()
-    last_date = today - datetime.timedelta(days=365)
+    last_date = today - datetime.timedelta(days=60)
 
     price = pq.Api.market_daily(start=last_date, end=today, 
         fields=['n_adjClose', 'n_volume', 'n_amount'])
