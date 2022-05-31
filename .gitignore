@@ -172,8 +172,6 @@ logs/
 assets/data/*
 !assets/data/README.md
 **/data
-*data*
-**/*data*
 !database.py
 
 # 垃圾箱 / 草稿箱

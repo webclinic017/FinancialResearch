@@ -10,6 +10,84 @@
 			"justMyCode": true
 		},
 		{
+			"name": "pandasquant/__init__",
+			"type": "python",
+			"request": "launch",
+			"module": "pandasquant.__init__"
+		},
+		{
+			"name": "pandasquant/staff/processor",
+			"type": "python",
+			"request": "launch",
+			"module": "pandasquant.staff.processor"
+		},
+		{
+			"name": "pandasquant/staff/calculator",
+			"type": "python",
+			"request": "launch",
+			"module": "pandasquant.staff.calculator"
+		},
+		{
+			"name": "pandasquant/staff/crawler",
+			"type": "python",
+			"request": "launch",
+			"module": "pandasquant.staff.crawler"
+		},
+		{
+			"name": "pandasquant/staff/provider",
+			"type": "python",
+			"request": "launch",
+			"module": "pandasquant.staff.provider"
+		},
+		{
+			"name": "pandasquant/staff/analyst",
+			"type": "python",
+			"request": "launch",
+			"module": "pandasquant.staff.analyst"
+		},
+		{
+			"name": "pandasquant/staff/fetcher",
+			"type": "python",
+			"request": "launch",
+			"module": "pandasquant.staff.fetcher"
+		},
+		{
+			"name": "pandasquant/staff/__init__",
+			"type": "python",
+			"request": "launch",
+			"module": "pandasquant.staff.__init__"
+		},
+		{
+			"name": "pandasquant/staff/backtester",
+			"type": "python",
+			"request": "launch",
+			"module": "pandasquant.staff.backtester"
+		},
+		{
+			"name": "pandasquant/staff/artist",
+			"type": "python",
+			"request": "launch",
+			"module": "pandasquant.staff.artist"
+		},
+		{
+			"name": "pandasquant/tools/core",
+			"type": "python",
+			"request": "launch",
+			"module": "pandasquant.tools.core"
+		},
+		{
+			"name": "pandasquant/tools/common",
+			"type": "python",
+			"request": "launch",
+			"module": "pandasquant.tools.common"
+		},
+		{
+			"name": "pandasquant/tools/__init__",
+			"type": "python",
+			"request": "launch",
+			"module": "pandasquant.tools.__init__"
+		},
+		{
 			"name": "factor/external_tester",
 			"type": "python",
 			"request": "launch",
@@ -28,40 +106,10 @@
 			"module": "factor.internal_tester"
 		},
 		{
-			"name": "factor/define/technical",
-			"type": "python",
-			"request": "launch",
-			"module": "factor.define.technical"
-		},
-		{
-			"name": "factor/define/__init__",
-			"type": "python",
-			"request": "launch",
-			"module": "factor.define.__init__"
-		},
-		{
-			"name": "factor/define/growth",
-			"type": "python",
-			"request": "launch",
-			"module": "factor.define.growth"
-		},
-		{
 			"name": "factor/define/size",
 			"type": "python",
 			"request": "launch",
 			"module": "factor.define.size"
-		},
-		{
-			"name": "factor/define/turnover",
-			"type": "python",
-			"request": "launch",
-			"module": "factor.define.turnover"
-		},
-		{
-			"name": "factor/define/valuation",
-			"type": "python",
-			"request": "launch",
-			"module": "factor.define.valuation"
 		},
 		{
 			"name": "factor/define/pricevolume",
@@ -70,16 +118,22 @@
 			"module": "factor.define.pricevolume"
 		},
 		{
-			"name": "factor/define/quality",
+			"name": "factor/define/turnover",
 			"type": "python",
 			"request": "launch",
-			"module": "factor.define.quality"
+			"module": "factor.define.turnover"
 		},
 		{
-			"name": "factor/define/leverage",
+			"name": "factor/define/growth",
 			"type": "python",
 			"request": "launch",
-			"module": "factor.define.leverage"
+			"module": "factor.define.growth"
+		},
+		{
+			"name": "factor/define/valuation",
+			"type": "python",
+			"request": "launch",
+			"module": "factor.define.valuation"
 		},
 		{
 			"name": "factor/define/volatility",
@@ -94,10 +148,28 @@
 			"module": "factor.define.base"
 		},
 		{
-			"name": "viewer/stock",
+			"name": "factor/define/leverage",
 			"type": "python",
 			"request": "launch",
-			"module": "viewer.stock"
+			"module": "factor.define.leverage"
+		},
+		{
+			"name": "factor/define/quality",
+			"type": "python",
+			"request": "launch",
+			"module": "factor.define.quality"
+		},
+		{
+			"name": "factor/define/__init__",
+			"type": "python",
+			"request": "launch",
+			"module": "factor.define.__init__"
+		},
+		{
+			"name": "factor/define/technical",
+			"type": "python",
+			"request": "launch",
+			"module": "factor.define.technical"
 		},
 		{
 			"name": "HtMachineLearning/01/01",
@@ -106,136 +178,28 @@
 			"module": "HtMachineLearning.01.01"
 		},
 		{
-			"name": "pandasquant/__init__",
+			"name": "viewer/stock",
 			"type": "python",
 			"request": "launch",
-			"module": "pandasquant.__init__"
+			"module": "viewer.stock"
 		},
 		{
-			"name": "pandasquant/tools/database",
+			"name": "viewer/data",
 			"type": "python",
 			"request": "launch",
-			"module": "pandasquant.tools.database"
+			"module": "viewer.data"
 		},
 		{
-			"name": "pandasquant/tools/__init__",
+			"name": "viewer/fund",
 			"type": "python",
 			"request": "launch",
-			"module": "pandasquant.tools.__init__"
+			"module": "viewer.fund"
 		},
 		{
-			"name": "pandasquant/tools/core",
+			"name": "viewer/view",
 			"type": "python",
 			"request": "launch",
-			"module": "pandasquant.tools.core"
-		},
-		{
-			"name": "pandasquant/tools/common",
-			"type": "python",
-			"request": "launch",
-			"module": "pandasquant.tools.common"
-		},
-		{
-			"name": "pandasquant/tools/ssh",
-			"type": "python",
-			"request": "launch",
-			"module": "pandasquant.tools.ssh"
-		},
-		{
-			"name": "pandasquant/staff/provider",
-			"type": "python",
-			"request": "launch",
-			"module": "pandasquant.staff.provider"
-		},
-		{
-			"name": "pandasquant/staff/__init__",
-			"type": "python",
-			"request": "launch",
-			"module": "pandasquant.staff.__init__"
-		},
-		{
-			"name": "pandasquant/staff/processor",
-			"type": "python",
-			"request": "launch",
-			"module": "pandasquant.staff.processor"
-		},
-		{
-			"name": "pandasquant/staff/artist",
-			"type": "python",
-			"request": "launch",
-			"module": "pandasquant.staff.artist"
-		},
-		{
-			"name": "pandasquant/staff/analyst",
-			"type": "python",
-			"request": "launch",
-			"module": "pandasquant.staff.analyst"
-		},
-		{
-			"name": "pandasquant/staff/calculator",
-			"type": "python",
-			"request": "launch",
-			"module": "pandasquant.staff.calculator"
-		},
-		{
-			"name": "pandasquant/staff/backtester",
-			"type": "python",
-			"request": "launch",
-			"module": "pandasquant.staff.backtester"
-		},
-		{
-			"name": "pandasquant/staff/fetcher",
-			"type": "python",
-			"request": "launch",
-			"module": "pandasquant.staff.fetcher"
-		},
-		{
-			"name": "pandasquant/staff/crawler",
-			"type": "python",
-			"request": "launch",
-			"module": "pandasquant.staff.crawler"
-		},
-		{
-			"name": "scripts/test",
-			"type": "python",
-			"request": "launch",
-			"module": "scripts.test"
-		},
-		{
-			"name": "strategy/script",
-			"type": "python",
-			"request": "launch",
-			"module": "strategy.script"
-		},
-		{
-			"name": "Researches/SwQuandrant/run",
-			"type": "python",
-			"request": "launch",
-			"module": "Researches.SwQuandrant.run"
-		},
-		{
-			"name": "Researches/FinancialRiskRatio/research",
-			"type": "python",
-			"request": "launch",
-			"module": "Researches.FinancialRiskRatio.research"
-		},
-		{
-			"name": "Researches/FinancialRiskRatio/research2",
-			"type": "python",
-			"request": "launch",
-			"module": "Researches.FinancialRiskRatio.research2"
-		},
-		{
-			"name": "Researches/AbsorbRatio/compcontrib",
-			"type": "python",
-			"request": "launch",
-			"module": "Researches.AbsorbRatio.compcontrib"
-		},
-		{
-			"name": "Researches/AbsorbRatio/test",
-			"type": "python",
-			"request": "launch",
-			"module": "Researches.AbsorbRatio.test"
+			"module": "viewer.view"
 		},
 		{
 			"name": "Researches/AbsorbRatio/ar",
@@ -244,16 +208,22 @@
 			"module": "Researches.AbsorbRatio.ar"
 		},
 		{
-			"name": "Researches/AmountConcentration/calculate",
+			"name": "Researches/AbsorbRatio/test",
 			"type": "python",
 			"request": "launch",
-			"module": "Researches.AmountConcentration.calculate"
+			"module": "Researches.AbsorbRatio.test"
 		},
 		{
-			"name": "Researches/AmountConcentration/validate",
+			"name": "Researches/AbsorbRatio/compcontrib",
 			"type": "python",
 			"request": "launch",
-			"module": "Researches.AmountConcentration.validate"
+			"module": "Researches.AbsorbRatio.compcontrib"
+		},
+		{
+			"name": "Researches/IndustrialMomentumAndReverse/matprocessor",
+			"type": "python",
+			"request": "launch",
+			"module": "Researches.IndustrialMomentumAndReverse.matprocessor"
 		},
 		{
 			"name": "Researches/IndustrialMomentumAndReverse/run",
@@ -262,10 +232,34 @@
 			"module": "Researches.IndustrialMomentumAndReverse.run"
 		},
 		{
-			"name": "Researches/IndustrialMomentumAndReverse/matprocessor",
+			"name": "Researches/SwQuandrant/run",
 			"type": "python",
 			"request": "launch",
-			"module": "Researches.IndustrialMomentumAndReverse.matprocessor"
+			"module": "Researches.SwQuandrant.run"
+		},
+		{
+			"name": "Researches/AmountConcentration/validate",
+			"type": "python",
+			"request": "launch",
+			"module": "Researches.AmountConcentration.validate"
+		},
+		{
+			"name": "Researches/AmountConcentration/calculate",
+			"type": "python",
+			"request": "launch",
+			"module": "Researches.AmountConcentration.calculate"
+		},
+		{
+			"name": "Researches/FinancialRiskRatio/research2",
+			"type": "python",
+			"request": "launch",
+			"module": "Researches.FinancialRiskRatio.research2"
+		},
+		{
+			"name": "Researches/FinancialRiskRatio/research",
+			"type": "python",
+			"request": "launch",
+			"module": "Researches.FinancialRiskRatio.research"
 		}
 	]
 }
