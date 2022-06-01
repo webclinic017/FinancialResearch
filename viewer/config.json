@@ -34,10 +34,11 @@
         "code": "005669",
         "fetcher": "fund",
         "subplot_names": [
-            ["ma_5", "ma_10", "ma_20", "ma_60"], 
+            ["ma_5", "ma_10", "ma_20", "ma_60", "bolltop_20_2", "bollbot_20_2"], 
             []],
         "subplot_kwargs": [
-            [{"color": "orange"}, {"color": "blue"}, {"color": "purple"}, {"color": "black"}],
+            [{"color": "orange"}, {"color": "blue"}, {"color": "purple"}, {"color": "black"}, 
+             {"color": "red"}, {"color": "green"}],
             []],
         "plot_type": "line",
         "show": true,

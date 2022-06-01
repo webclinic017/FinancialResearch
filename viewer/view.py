@@ -84,7 +84,7 @@ class Canvas:
 
         for i, ax in enumerate(axes[::2]):
             if i == 0:
-                extra_line = 2
+                extra_line = 1
             else:
                 extra_line = 0
             ax.legend([None] * (len(self.subplot_names[i]) + extra_line))
@@ -105,6 +105,5 @@ class Canvas:
 if __name__ == "__main__":
     with open('viewer/config.json', 'r') as f:
         config = json.load(f)
-    # Canvas(config=config['GZMT'])()
     asset = sys.argv[1]
     Canvas(config=config[asset])()
