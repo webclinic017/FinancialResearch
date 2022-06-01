@@ -5,3 +5,12 @@ matplotlib
 statsmodels
 ipykernel
 pymysql
+redis
+pymssql
+mplfinance
+scipy
+lxml
+openpyxl
+pyarrow
+backtrader
+sqlalchemy
