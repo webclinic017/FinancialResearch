@@ -1,54 +1,72 @@
-# --- 导入依赖
+# ---
+import matplotlib.pyplot as plt
 import pandasquant as pq
 import pandas as pd
 from scipy.stats import norm
+import numpy as np
 
-# --- 需要的数据列表
-relation = pd.read_excel('Researches/FinancialRiskRatio/relation.xlsx').dropna()
+# ---
+relation = pd.read_excel('Researches/FinancialRiskRatio/relation.xlsx', usecols=['from', 'to']).dropna()
 relation_list = set(relation['from'].to_list() + relation['to'].to_list())
-balance_indicator = list(map(lambda x: x.split('.')[1], list(filter(lambda x: x.startswith('balance'), relation_list))))
-income_indicator = list(map(lambda x: x.split('.')[1] , list(filter(lambda x: x.startswith('income'), relation_list))))
-cashflow_indicator = list(map(lambda x: x.split('.')[1], list(filter(lambda x: x.startswith('cashflow'), relation_list))))
-ttm_indicator = list(map(lambda x: x.split('.')[1], list(filter(lambda x: x.startswith('ttm'), relation_list))))
+balance_indicator = list(filter(lambda x: x.startswith('balance'), relation_list))
+balance_indicator = list(map(lambda x: x.split('.')[1], balance_indicator))
+income_indicator = list(filter(lambda x: x.startswith('income'), relation_list))
+income_indicator = list(map(lambda x: x.split('.')[1] , income_indicator))
+cashflow_indicator = list(filter(lambda x: x.startswith('cashflow'), relation_list))
+cashflow_indicator = list(map(lambda x: x.split('.')[1], cashflow_indicator))
+ttm_indicator = list(filter(lambda x: x.startswith('ttm'), relation_list))
+ttm_indicator = list(map(lambda x: x.split('.')[1], ttm_indicator))
 
-# --- 读取必要的数据
-industry = pd.read_parquet('Researches/FinancialRiskRatio/data.nosync/industry.parquet')
-ttm = pd.read_parquet('Researches/FinancialRiskRatio/data.nosync/ttm.parquet')
-balance = pd.read_parquet('Researches/FinancialRiskRatio/data.nosync/balance.parquet')
-income = pd.read_parquet('Researches/FinancialRiskRatio/data.nosync/income.parquet')
-cashflow = pd.read_parquet('Researches/FinancialRiskRatio/data.nosync/cashflow.parquet')
+# ---
+'''
+balance = pq.Filer.read_csv_directory('/Users/oak/Library/Containers/com.tencent.xinWeChat/Data/Library/Application Support/com.tencent.xinWeChat/2.0b4.0.9/594c89b5881202d252804932a6a1aa29/Message/MessageTemp/f1d2258a4159f4e12dea50db99871185/File/stock_balance', index_col='report_date', perspective='asset',
+                                      parse_dates=True, usecols=balance_indicator + ['statement_type', 'report_date'])
+income = pq.Filer.read_csv_directory('/Users/oak/Library/Containers/com.tencent.xinWeChat/Data/Library/Application Support/com.tencent.xinWeChat/2.0b4.0.9/594c89b5881202d252804932a6a1aa29/Message/MessageTemp/f1d2258a4159f4e12dea50db99871185/File/stock_income', index_col='report_date', perspective='asset',
+                                     parse_dates=True, usecols=income_indicator + ['statement_type', 'report_date'])
+cashflow = pq.Filer.read_csv_directory('/Users/oak/Library/Containers/com.tencent.xinWeChat/Data/Library/Application Support/com.tencent.xinWeChat/2.0b4.0.9/594c89b5881202d252804932a6a1aa29/Message/MessageTemp/f1d2258a4159f4e12dea50db99871185/File/stock_cashflow', index_col='report_date', perspective='asset',
+                                     parse_dates=True, usecols=cashflow_indicator + ['statement_type', 'report_date'])
+ttm = pq.Filer.read_csv_directory('/Users/oak/Library/Containers/com.tencent.xinWeChat/Data/Library/Application Support/com.tencent.xinWeChat/2.0b4.0.9/594c89b5881202d252804932a6a1aa29/Message/MessageTemp/f1d2258a4159f4e12dea50db99871185/File/stock_ttm', index_col='stock_id', perspective='datetime',
+                                     parse_dates=['report_date'], usecols=ttm_indicator + ['stock_id', 'report_date'])
+balance = balance[balance.statement_type == 408001000].drop('statement_type', axis=1)
+income = income[income.statement_type == 408001000].drop('statement_type', axis=1)
+cashflow = cashflow[cashflow.statement_type == 408001000].drop('statement_type', axis=1)
+ttm = ttm.reset_index().set_index(['report_date', 'stock_id']).drop(
+    'level_0', axis=1).sort_index().dropna(how='all')
+ttm = ttm[~ttm.index.duplicated(keep='last')]
+balance.to_parquet('data.nosync/balance')
+income.to_parquet('data.nosync/income')
+cashflow.to_parquet('data.nosync/cashflow')
+ttm.to_parquet('data.nosync/ttm')
+'''
 
-# --- ttm数据及industry数据需要对交易日进行调整
-ttm = ttm.converter.resample('q').last()
-industry = industry.converter.resample('q').last()
+# ---
+balance = pd.read_parquet('data.nosync/balance')
+income = pd.read_parquet('data.nosync/income')
+cashflow = pd.read_parquet('data.nosync/cashflow')
+industry = pd.read_parquet('data.nosync/industry')
+ttm = pd.read_parquet('data.nosync/ttm')
 
-# --- select the common part
-common_index = balance.index.levels[0].intersection(income.index.levels[0]).\
-    intersection(cashflow.index.levels[0]).intersection(ttm.index.levels[0])
+# ---
+income_diff = income.converter.cum2diff(lambda x: x[0].year)
+income = income_diff.groupby(level=1).rolling(4).sum().droplevel(0).sort_index().dropna(how='all')
+
+# ---
+industry = industry.groupby([pd.Grouper(level=0, freq='q'), pd.Grouper(level=1)]).last()
+
+# ---
+common_index = ttm.index.intersection(income.index).intersection(
+    cashflow.index).intersection(industry.index).intersection(balance.index)
 balance = balance.loc[common_index]
 income = income.loc[common_index]
 cashflow = cashflow.loc[common_index]
 ttm = ttm.loc[common_index]
-industry = industry.loc[common_index]
-# rename the index
-balance.index.names = ['datetime', 'asset']
-cashflow.index.names = ['datetime', 'asset']
-income.index.names = ['datetime', 'asset']
-ttm.index.names = ['datetime', 'asset']
-industry.index.names = ['datetime', 'asset']
 
-# --- 对利润表数据进行ttm处理
-income = income.converter.cum2diff(grouper=lambda x: x[0].year)
-income = income.groupby(level=1).rolling(4, min_periods=1).sum().droplevel(0)
-
-# --- 提取净利润
+# ---
 net_profit = ttm.loc[:, 'net_profit_ttm']
-net_profit_forward = net_profit.converter.price2fwd(1)
-net_profit_industry = net_profit.groupby([pd.Grouper(level=0), industry.group]).mean()
-net_profit_industry_forward = net_profit_industry.converter.price2fwd(1)
-net_profit_industry_forward = net_profit_industry_forward.preprocessor.standarize(method='zscore')
+net_profit_growth = net_profit.groupby(level=1).shift(-1) / net_profit - 1
+net_profit_growth_growth = net_profit_growth.groupby(level=1).shift(-1) / net_profit_growth - 1
 
-# --- 计算比值
+# ---
 ratio = pd.DataFrame()
 for i, rel in relation.iterrows():
     from_table = eval(rel['from'].split('.')[0])
@@ -68,7 +86,7 @@ ratio_processed = ratio.preprocessor.standarize('zscore')\
     .preprocessor.fillna('mean', grouper=industry.group)\
     .preprocessor.deextreme('mad')
 
-# --- 滚动窗口计算行业内的财务质量得分
+# ---
 def calc_unit(data):
     def _calc_inner_ind(_data):
         res = 1 - norm.sf(_data) * 2
@@ -85,38 +103,50 @@ def calc_unit(data):
 
 score = ratio_processed.calculator.rolling(window=30, func=calc_unit)
 
-# --- 板块分类器
-plate_dict = {
-    '600': 'zb',
-    '601': 'zb',
-    '603': 'zb',
-    '605': 'zb',
-    '000': 'zb',
-    '002': 'zxb',
-    '300': 'cyb',
-    '688': 'kcb',
-}
+# ---
+industry_score = score.groupby([pd.Grouper(level=0), industry.group]).mean()
+industry_score = industry_score.loc[industry_score.index.get_level_values(1) != '']
 
 # ---
-ic = score.describer.ic(net_profit_forward)
-# ic = score.describer.ic(net_profit_forward, grouper=industry.group)
-# ic = score.describer.ic(net_profit_forward, grouper=lambda x: plate_dict.get(x[1][:3], 'unknown'))
-test_result = ic.tester.sigtest()
-# ir = ic.groupby(level=1).mean() / ic.groupby(level=1).std()
-# ir = ic.mean() / ic.std()
+ic_gg = score.describer.ic(net_profit_growth_growth)
+ic_g = score.describer.ic(net_profit_growth)
 
 # ---
-with pq.Gallery(1, 1, path='Researches/FinancialRiskRatio/image/ic-all.png') as g:
-    ic.drawer.draw('bar', indicator='factor', ax=g.axes[0, 0], title='all_stock', label='corr')
-    ic.rolling(4).mean().drawer.draw('line', indicator='factor', 
-        label='MA_Year', ax=g.axes[0, 0], color='#CC6633')
-    g.axes[0, 0].legend()
+ic_g.tester.sigtest()
 
 # ---
-for plate in ['zb', 'cyb', 'kcb', 'zxb']:
-    with pq.Gallery(1, 1, path=f'Researches/FinancialRiskRatio/image/ic-by-{plate}.png') as g:
-        ic.drawer.draw('bar', asset=f'{plate}', indicator='factor', 
-            ax=g.axes[0, 0], title=f'{plate}', label='corr')
-        ic.groupby(level=1).rolling(4).mean().droplevel(0).sort_index().drawer.draw(
-            'line', asset=f'{plate}', indicator='factor', label='MA_Year', ax=g.axes[0, 0], color='#CC6633')
-        g.axes[0, 0].legend()
+ic_gg.tester.sigtest()
+
+# ---
+def industry_forward(data):
+    last_date = data.index.get_level_values(0)[-1]
+    first_date = data.index.get_level_values(0)[0]
+    common_company = data.loc[first_date].index.intersection(data.loc[last_date].index)
+    last_sum = data.loc[last_date, common_company].sum()
+    first_sum = data.loc[first_date, common_company].sum()
+    if first_sum == 0:
+        return np.nan
+    return last_sum / first_sum - 1
+
+net_profit_growth_industry = net_profit.groupby(industry.group).apply(lambda x: x.calculator.rolling(2, industry_forward))
+net_profit_growth_industry = net_profit_growth_industry.swaplevel().sort_index()
+net_profit_growth_industry = net_profit_growth_industry.loc[net_profit_growth_industry.index.get_level_values(1) != '']
+net_profit_growth_industry = net_profit_growth_industry.preprocessor.deextreme('mad').preprocessor.standarize('zscore')
+net_profit_growth_industry = net_profit_growth_industry.groupby(level=1).shift(-1)[0]
+
+net_profit_growth_growth_industry = net_profit_growth_industry.groupby(level=1).shift(-1) / net_profit_growth_industry - 1
+net_profit_growth_growth_industry = net_profit_growth_growth_industry.preprocessor.deextreme('mad').preprocessor.standarize('zscore')
+
+# ---
+def reverso_record(code):
+    data = pd.read_html(f'https://vip.stock.finance.sina.com.cn/corp/go.php/vGP_GetOutOfLine/stockid/{code}.phtml')
+    data = data[13]
+    data
+
+# ---
+with pq.Gallery(1, 1, figsize=(12, 8)) as g:
+    draw_data = pd.concat([net_profit_growth_industry, industry_score], axis=1).dropna()
+    draw_data = draw_data.groupby(level=1).rolling(4).mean().droplevel(0).sort_index()
+    draw_data.columns = ['net_profit_growth_growth', 'industry_score']
+    draw_data.drawer.draw('bar', indicator='net_profit_growth_growth', asset='zx_steel', ax=g.axes[0, 0], color='orange')
+    draw_data.drawer.draw('line', indicator='industry_score', asset='zx_steel', ax=g.axes[0, 0].twinx())

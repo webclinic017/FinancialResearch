@@ -172,6 +172,7 @@ logs/
 assets/data/*
 !assets/data/README.md
 **/data
+data.nosync
 !database.py
 
 # 垃圾箱 / 草稿箱
