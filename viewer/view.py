@@ -7,7 +7,7 @@ from .strategies import *
 
 
 # Get dataset
-data = etffeedsina('sh510300')
+data = etffeedsina('sh510300', '2019-01-01')
 
 # Create a cerebro entity
 cerebro = bt.Cerebro()
@@ -22,7 +22,7 @@ cerebro.broker.setcash(1000000)
 cerebro.adddata(data)
 
 # Add indicators
-# cerebro.addindicator(Grid, period=20)
+cerebro.addindicator(SMACombination)
 
 # Add strategy
 cerebro.addstrategy(GridStrategy)
