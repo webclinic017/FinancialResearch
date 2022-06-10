@@ -29,3 +29,16 @@ class SMACombination(bt.Indicator):
         self.lines.sma60 = bt.indicators.SMA(period=60)
         self.lines.sma120 = bt.indicators.SMA(period=120)
         self.lines.sma250 = bt.indicators.SMA(period=250)
+
+
+class KShape(bt.Indicator):
+    lines = ('hammer', 'hangingman', 'piercing', )
+    plotinfo = dict(subplot=True)
+
+    def __init__(self):
+        self.lines.hammer = bt.talib.CDLHAMMER(self.data.open, 
+            self.data.high, self.data.low, self.data.close)
+        self.lines.hangingman = bt.talib.CDLHANGINGMAN(self.data.open,
+            self.data.high, self.data.low, self.data.close)
+        self.lines.piercing = bt.talib.CDLPIERCING(self.data.open,
+            self.data.high, self.data.low, self.data.close)
