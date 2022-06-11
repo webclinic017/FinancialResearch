@@ -1,3 +1,4 @@
+import numpy as np
 import backtrader as bt
 import pandasquant as pq
 from .indicators import *
@@ -77,3 +78,46 @@ class GridStrategy(pq.Strategy):
             if self.order.status not in [self.order.Canceled, self.order.Completed, self.order.Rejected, self.order.Expired]:
                 self.cancel(self.order)
             self.sellgrid(self.grid[0])
+
+class TurtleStrategy(bt.Strategy):
+    
+    def __init__(self) -> None:
+        self.atr = bt.indicators.ATR(period=14)
+        self.unit = 0.1
+        self.currentpos = 0
+        self.order = None
+        self.lastbuyprice = np.inf
+        self.alreadybuy = False
+        high = bt.indicators.Highest(self.data.high, period=20)
+        self.buysig = high(-1) <= self.data.close
+
+    def next(self):
+        if self.buysig[0] and not self.alreadybuy:
+            self.order_target_percent(target=self.currentpos + self.unit)
+
+        elif self.alreadybuy and self.data.close[0] >= self.lastbuyprice + self.atr[0]:
+            self.order_target_percent(target=self.currentpos + self.unit)
+
+    def notify_order(self, order):
+        if order.status in [order.Created, order.Accepted, order.Submitted]:
+            return
+        elif order.status in [order.Completed]:
+            self.log(f'Trade <{order.executed.size}> at <{order.executed.price}>')
+            if order.isbuy():
+                self.currentpos += self.unit
+                self.lastbuyprice = order.executed.price
+                self.alreadybuy = True
+                if len(self.broker.pending) > 0:
+                    # price = self.broker.pending[0].price + self.atr[0]
+                    self.cancel(self.broker.pending[0])
+                # else:
+                price = order.executed.price - self.atr[0]
+                self.sell(size=self.getposition().size, 
+                    exectype=bt.Order.Stop, price=price)
+            else:
+                self.alreadybuy = False
+                self.currentpos = 0
+
+    def log(self, msg: str, hint: str = 'INFO'):
+        dt = self.data.datetime.date(0)
+        print(f'[{hint}] {dt} {msg}')
