@@ -1,8 +1,7 @@
 import pandas as pd
 import backtrader as bt
 import pandasquant as pq
-import matplotlib.pyplot as plt
-from .datas import *
+from .data import *
 from .indicators import *
 from .strategies import *
 
@@ -28,9 +27,9 @@ cerebro.adddata(data)
 # cerebro.addindicator(KShape)
 
 # Add strategy
-# cerebro.addstrategy(GridStrategy, cashnum=5)
+cerebro.addstrategy(GridStrategy, cashnum=50)
 # cerebro.addstrategy(SMACrossStrategy)
-cerebro.addstrategy(TurtleStrategy)
+# cerebro.addstrategy(TurtleStrategy)
 
 # Add observers
 cerebro.addobserver(bt.observers.Broker)
