@@ -56,3 +56,13 @@ class TurtleStrategy(pq.Strategy):
             else:
                 self.alreadybuy = False
                 self.currentpos = 0
+
+class BollingStrategy(pq.Strategy):
+    def __init__(self):
+        self.bollinger = bt.indicators.BollingerBands(period=20, devfactor=2)
+    
+    def next(self):
+        if self.data.close[0] >= self.bollinger.bot[0] and self.data.close[-1] < self.bollinger.bot[-1]:
+            self.order_target_percent(target=0.95)
+        elif self.data.close[0] <= self.bollinger.top[0] and self.data.close[-1] > self.bollinger.top[-1]:
+            self.order_target_percent(target=0)

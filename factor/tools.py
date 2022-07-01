@@ -66,6 +66,7 @@ class Factor:
             factor = self.factor
 
         factor.index.names = ['datetime', 'asset']
+        factor.name = self.name
         return factor
     
     def __call__(self, func):
