@@ -176,3 +176,6 @@ trashbin.nosync/
 scripts/
 scripts.nosync/
 script.py
+
+# 缓存文件
+pandasquant/cache
