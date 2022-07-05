@@ -1,14 +1,14 @@
+import sys
+import pandasquant
 import pandas as pd
-import pandasquant as pq
 import numpy as np
 import matplotlib.pyplot as plt
 from functools import wraps
-from factor.define.base import FactorBase
 
 
 class Factor:
     def __init__(self, name: str,
-                 pool: 'str | list | pd.Index | pd.MultiIndex' = None,
+                 pool: 'list | pd.Index | pd.MultiIndex' = None,
                  deextreme: str = 'mad',
                  standardize: str = 'zscore',
                  fillna: str = 'mean',
@@ -26,13 +26,6 @@ class Factor:
     def filter_pool(self) -> 'pd.Series | pd.DataFrame':
         if self.pool is None:
             return self.factor
-               
-        elif isinstance(self.pool, str):
-            stocks = pq.Api.index_weight(start = self.factor.index.levels[0][0], 
-                end=self.factor.index.levels[0][1], 
-                conditions=f'c_indexCode={self.pool}')
-            stocks = stocks.index.intersection(self.factor.index)
-            return self.factor.loc[stocks.index]
         
         elif isinstance(self.pool, pd.MultiIndex):
             stocks = self.pool.index.intersection(self.factor.index)
@@ -44,7 +37,7 @@ class Factor:
         
         elif isinstance(self.pool, list):
             stocks = pd.Index(stocks)
-            stocks = stocks.index.intersection(self.factor.index.levvels[1])
+            stocks = stocks.index.intersection(self.factor.index.levels[1])
             return self.factor.loc[stocks]
     
     def preprocess(self):
@@ -79,100 +72,63 @@ class Factor:
             return self.factor
         return wrapper
 
+def single_factor_analysis(factor_data: pd.Series, forward_return: 'pd.Series | pd.DataFrame',
+                           grouper: 'pd.Series | pd.DataFrame | dict' = None, 
+                           benchmark: pd.Series = None, q: int = 5, commission: float = 0.001, 
+                           commission_type: str = 'both', plot_period: 'int | str' = -1, 
+                           data_path: str = None, image_path: str = None, show: bool = True):
+    if isinstance(forward_return, pd.DataFrame):
+        forward_return = forward_return.stack()
+        forward_return.name = 'forward'
 
-def get_factor_data(factor: FactorBase, date: list):
-    date = pq.item2list(date)
-    data = []
-    for dt in date:
-        print(f'[*] Getting factor {factor} on {dt}')
-        data.append(factor(dt))
-    pure_factor_data = pd.concat(data, axis=0).astype('float64').iloc[:, 0]
-    return pure_factor_data
+    if isinstance(grouper, pd.DataFrame):
+        grouper = grouper.stack()
+        grouper.name = 'grouper'
 
-def get_forward_return(start_date, end_date, period: int, freq: str):
-    freq_setting = {'daily': 1, 'monthly': 21}
-    trade_dates = pq.Stock.trade_date(start_date, end_date,
-                                      fields='trading_date').iloc[:, 0].dropna().to_list()
-    next_date = pq.Stock.nearby_n_trade_date(end_date, 1)
-    forward_date = pq.Stock.nearby_n_trade_date(
-        next_date, period * freq_setting[freq])
-    forward_dates = pq.Stock.trade_date(
-        end_date, forward_date, fields='trading_date').iloc[:, 0].dropna().to_list()
-    date = trade_dates + forward_dates
-    date = pq.item2list(date)
-    date = pd.DataFrame(date, columns=['orignal_date'])
-    shift_1_day = []
-    for d in date['orignal_date'].to_list():
-        shift_1_day.append(pq.Stock.nearby_n_trade_date(d, 1))
-    date = pd.concat(
-        [date, pd.Series(shift_1_day).rename('shift_1_day')], axis=1)
-    date['shift_1_period'] = date['shift_1_day'].shift(
-        -period * freq_setting[freq])
-    date = date.dropna()
-    date = date.iloc[[i for i in range(
-        0, len(date), period * freq_setting[freq])], :].reset_index(drop=True)
-    data = []
-    for _, row in date.iterrows():
-        dt = pq.str2time(row['orignal_date'])
-        price_buy_date = pq.Stock.market_daily(row['shift_1_day'],
-                                               row['shift_1_day'], fields='adj_open').droplevel(0)
-        price_sell_date = pq.Stock.market_daily(row['shift_1_period'],
-                                                row['shift_1_period'], fields='adj_open').droplevel(0)
-        if price_buy_date.empty or price_sell_date.empty:
-            print(f'[!] Cannot get forward return on {dt}')
-            break
-        else:
-            print(f'[*] Getting forward return on {dt}')
-        ret = price_sell_date.iloc[:, 0] / price_buy_date.iloc[:, 0] - 1
-        ret.index = pd.MultiIndex.from_product([[row['orignal_date']], ret.index],
-                                               names=['datetime', 'asset'])
-        data.append(ret)
-    data = pd.concat(data, axis=0).astype('float64')
-    trade_dates = data.index.get_level_values(0).drop_duplicates().to_list()
-    return data, trade_dates
+    # slice the common part of data
+    common_index = factor_data.index.intersection(forward_return.index)
+    if grouper is not None:
+        common_index = common_index.intersection(grouper.index)
+    
+    factor_data = factor_data.loc[common_index]
+    forward_return = forward_return.loc[common_index]
+    if grouper is not None:
+        grouper = grouper.loc[common_index]
 
-def get_industry_mapping(date: list):
-    date = pq.item2list(date)
-    data = []
-    for dt in date:
-        print(f'[*] Getting industry mapping on {dt}')
-        data.append(pq.Stock.plate_info(dt, dt,
-                                        fields='citi_industry_name1').citi_industry_name1)
-    return pd.concat(data, axis=0)
-
-def single_factor_analysis(factor_data: pd.Series, forward_return: pd.Series,
-                           grouper: pd.Series = None, benchmark: pd.Series = None,
-                           q: int = 5, commission: float = 0.001, commission_type: str = 'both',
-                           plot_period: 'int | str' = -1, data_path: str = None,
-                           image_path: str = None, show: bool = True):
-    plt.rcParams['font.family'] = ['Songti SC']
+    if sys.platform == 'linux':
+        plt.rcParams['font.family'] = ['DejaVu Serif']
+    elif sys.platform == 'darwin':
+        plt.rcParams['font.family'] = ['Songti SC']
     data_writer = pd.ExcelWriter(data_path) if data_path is not None else None
-    with pq.Gallery(7, 1, show=show, path=image_path, xaxis_keep_mask=[1, 0, 0, 0, 0, 0, 0]) as g:
-        cross_section_test(factor_data, forward_return, grouper, 
-                           plot_period=plot_period, data_writer=data_writer, 
-                           boxplot_ax=g.axes[0, 0], scatter_ax=g.axes[1, 0], 
-                           hist_ax=g.axes[2, 0])
+    _, axes = plt.subplots(7, 1, figsize=(12, 7 * 8))
+    cross_section_test(factor_data, forward_return, grouper, 
+                        plot_period=plot_period, data_writer=data_writer, 
+                        boxplot_ax=axes[0], scatter_ax=axes[1], 
+                        hist_ax=axes[2])
+    if grouper is not None:
         barra_test(factor_data, forward_return, grouper,
-                   data_writer=data_writer, barra_ax=g.axes[3, 0])
-                   
-        ic_test(factor_data, forward_return, grouper,
-                data_writer=data_writer, ic_ax=g.axes[4, 0])
+                    data_writer=data_writer, barra_ax=axes[3])
                 
-        layering_test(factor_data, forward_return, q=q, 
-                      commission=commission, commission_type=commission_type,
-                      benchmark=benchmark, data_writer=data_writer, 
-                      layering_ax=g.axes[5, 0], turnover_ax=g.axes[6, 0])
-    data_writer.close()
+    ic_test(factor_data, forward_return, grouper,
+            data_writer=data_writer, ic_ax=axes[4])
+            
+    layering_test(factor_data, forward_return, q=q, 
+                  commission=commission, commission_type=commission_type,
+                  benchmark=benchmark, data_writer=data_writer, 
+                  layering_ax=axes[5], turnover_ax=axes[6])
+    if image_path is not None:
+        plt.savefig(image_path)
+    if show:
+        plt.show()
+    if data_writer is not None:
+        data_writer.close()
 
 def cross_section_test(factor_data: pd.Series, forward_return: pd.Series,
                        grouper: pd.Series = None, plot_period: 'int | str' = -1,
                        data_writer: pd.ExcelWriter = None, scatter_ax: plt.Axes = None,
                        boxplot_ax: plt.Axes = None, hist_ax: plt.Axes = None) -> None:
-    if grouper is not None:
-        concated_data = pd.concat([factor_data, forward_return, grouper], axis=1)
-    else:
-        concated_data = pd.concat([factor_data, forward_return], axis=1)
-
+    """"""
+    concated_data = pd.concat([factor_data, forward_return, grouper], axis=1, join='inner')
     datatime_index = concated_data.dropna().index.get_level_values(0).unique()
     if isinstance(plot_period, int):
         plot_period = datatime_index[plot_period]
@@ -194,7 +150,7 @@ def cross_section_test(factor_data: pd.Series, forward_return: pd.Series,
                     continue
                 group_cs.drawer.draw('hist', bins=80, ax=hist_ax, label=group, indicator=factor_data.name, alpha=0.7)
         else:
-            concated_data[plot_period].drawer.draw('hist', ax=hist_ax, 
+            concated_data.loc[plot_period].drawer.draw('hist', ax=hist_ax, 
                 indicator=factor_data.name, bins=80, alpha=0.7)
         hist_ax.legend()
 
@@ -225,8 +181,8 @@ def ic_test(factor_data: pd.Series, forward_return: pd.Series,
         if grouper is not None:
             ic_grouped.filer.to_multisheet_excel(data_writer, perspective='asset')
     if ic_ax is not None:
-        ic.drawer.draw('bar', ax=ic_ax, label='ic')
-        ic.rolling(12).mean().drawer.draw('line', ax=ic_ax, label='ic_rolling12', title='IC test')
+        ic.drawer.draw('bar', ax=ic_ax)
+        ic.rolling(12).mean().drawer.draw('line', ax=ic_ax, title='IC test')
         ic_ax.hlines(y=0.03, xmin=ic_ax.get_xlim()[0], 
             xmax=ic_ax.get_xlim()[1], color='#aa3333', linestyle='--')
         ic_ax.hlines(y=-0.03, xmin=ic_ax.get_xlim()[0], 
@@ -261,7 +217,7 @@ def layering_test(factor_data: pd.Series, forward_return: pd.Series, q: int = 5,
     if layering_ax is not None:
         profit.drawer.draw('bar', ax=layering_ax)
         cumprofit.drawer.draw('line', ax=layering_ax.twinx(), title='layering test')
-        layering_ax.hlines(y=1, xmin=layering_ax.get_xlim()[0], 
+        layering_ax.twinx().hlines(y=1, xmin=layering_ax.get_xlim()[0], 
             xmax=layering_ax.get_xlim()[1], color='grey', linestyle='--')
 
     if turnover_ax is not None:

@@ -1,10 +1,17 @@
 import numpy as np
 import pandas as pd
 import pandasquant as pq
-from factor.define.base import FactorBase
+from ..tools import Factor
 
 
-class FactorPriceVolume(FactorBase):
+@Factor(name='momentum')
+def momentum():
+    data = pd.read_parquet("/home/pjq/data/kline_daily")
+    ret = data['close'].converter.price2ret(period=5)
+    ret = ret.dropna()
+    return ret
+
+class FactorPriceVolume():
     def __init__(self, name):
         super().__init__(name)
         self.klass = 'pricevolume'
@@ -118,7 +125,7 @@ class Amplitude(FactorPriceVolume):
 
 if __name__ == "__main__":
     import time
-    factor = Amplitude(20)
     start = time.time()
-    print(factor('20200106'))
+    factor = momentum()
+    print(factor.unstack())
     print(f'time: {time.time() - start:.2f}s')
