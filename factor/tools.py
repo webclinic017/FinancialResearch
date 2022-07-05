@@ -1,5 +1,5 @@
 import sys
-import pandasquant
+import pandasquant as pq
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -78,18 +78,22 @@ def single_factor_analysis(factor_data: 'pd.Series | pd.DataFrame', forward_retu
                            commission_type: str = 'both', plot_period: 'int | str' = -1, 
                            data_path: str = None, image_path: str = None, show: bool = True):
     if isinstance(factor_data, pd.DataFrame):
+        pq.Console.print('[yello][!][/yellow] Factor data in wide form, transposing ... ')
         factor_data = factor_data.stack()
         factor_data.name = 'factor'
 
     if isinstance(forward_return, pd.DataFrame):
+        pq.Console.print('[yellow][!][/yellow] Forward return in wide form, transposing ... ')
         forward_return = forward_return.stack()
         forward_return.name = 'forward'
 
     if isinstance(grouper, pd.DataFrame):
+        pq.Console.print('[yello][!][/yellow] Grouper in wide form, transposing ... ')
         grouper = grouper.stack()
         grouper.name = 'grouper'
 
     # slice the common part of data
+    pq.Console.print('[green][*][/green] Gathering data and filter common part ... ')
     common_index = factor_data.index.intersection(forward_return.index)
     if grouper is not None:
         common_index = common_index.intersection(grouper.index)
@@ -112,17 +116,23 @@ def single_factor_analysis(factor_data: 'pd.Series | pd.DataFrame', forward_retu
                         boxplot_ax=axes[0], scatter_ax=axes[1], 
                         hist_ax=axes[2])
                         
+    pq.Console.rule('Barra Test')
     if grouper is not None:
         barra_test(factor_data, forward_return, grouper,
-                    data_writer=data_writer, barra_ax=axes[3])
+                    data_writer=data_writer, barra_ax=axes[3], show=show)
+    else:
+        pq.Console.print('[yellow][!][/yellow] You didn\'t provide group information,'
+            'so it is impossible to make barra test')
                 
+    pq.Console.rule('IC Test')
     ic_test(factor_data, forward_return, grouper,
-            data_writer=data_writer, ic_ax=axes[4])
+            data_writer=data_writer, ic_ax=axes[4], show=show)
             
+    pq.Console.rule('Layering Test')
     layering_test(factor_data, forward_return, q=q, 
                   commission=commission, commission_type=commission_type,
                   benchmark=benchmark, data_writer=data_writer, 
-                  layering_ax=axes[5], turnover_ax=axes[6])
+                  layering_ax=axes[5], turnover_ax=axes[6], show=show)
 
     if image_path is not None:
         plt.savefig(image_path)
@@ -164,11 +174,14 @@ def cross_section_test(factor_data: pd.Series, forward_return: pd.Series,
 
 def barra_test(factor_data: pd.Series, forward_return: pd.Series,
                grouper: pd.Series, data_writer: pd.ExcelWriter = None,
-               barra_ax: plt.Axes = None) -> None:
+               barra_ax: plt.Axes = None, show: bool = True) -> None:
     grouper_dummies = pd.get_dummies(grouper).iloc[:, 1:]
     barra_data = pd.concat([grouper_dummies, factor_data, forward_return], axis=1)
     barra_result = barra_data.regressor.ols(
         x_col=barra_data.columns[:-1].tolist(), y_col=barra_data.columns[-1])
+
+    if show:
+        barra_result.printer.display(title='barra result')
     if data_writer is not None:
         barra_result.filer.to_multisheet_excel(data_writer, perspective='indicator')
     if barra_ax is not None:
@@ -179,11 +192,16 @@ def barra_test(factor_data: pd.Series, forward_return: pd.Series,
 
 def ic_test(factor_data: pd.Series, forward_return: pd.Series,
             grouper: pd.Series = None, data_writer: pd.ExcelWriter = None,
-            ic_ax: plt.Axes = None) -> None:
+            ic_ax: plt.Axes = None, show: bool = True) -> None:
     ic = factor_data.describer.ic(forward_return)
     if grouper is not None:
         ic_grouped = factor_data.describer.ic(forward=forward_return, grouper=grouper)
         ic_grouped = ic_grouped.loc[ic_grouped.index.get_level_values(1) != 'nan']
+    
+    if show:
+        ic.round(4).printer.display(title='ic')
+        if grouper is not None:
+            ic_grouped.round(4).printer.display(title='ic (grouped)')
     if data_writer is not None:
         ic.to_excel(data_writer, sheet_name='ic test result')
         if grouper is not None:
@@ -199,7 +217,7 @@ def ic_test(factor_data: pd.Series, forward_return: pd.Series,
 def layering_test(factor_data: pd.Series, forward_return: pd.Series, q: int = 5,
                   commission_type: str = 'both', commission: float = 0.001,
                   benchmark: pd.Series = None, data_writer: pd.ExcelWriter = None,
-                  layering_ax: plt.Axes = None, turnover_ax: plt.Axes = None) -> None:
+                  layering_ax: plt.Axes = None, turnover_ax: plt.Axes = None, show: bool = True) -> None:
     # TODO: finish layering within group
     quantiles = factor_data.groupby(level=0).apply(pd.qcut, q=q, labels=False) + 1
     weight = pd.Series(np.ones_like(quantiles), index=quantiles.index)
@@ -214,6 +232,11 @@ def layering_test(factor_data: pd.Series, forward_return: pd.Series, q: int = 5,
     if benchmark is not None:
         benchmark_ret = benchmark / benchmark.iloc[0]
         cumprofit = pd.concat([cumprofit, benchmark_ret], axis=1).dropna()
+
+    if show:
+        profit.round(4).printer.display(title='profit')
+        cumprofit.round(4).printer.display(title='cumulative profit')
+        turnover.round(2).printer.display(title='turnover')
 
     if data_writer is not None:
         profit_data = pd.concat([profit, cumprofit.stack()], axis=1)

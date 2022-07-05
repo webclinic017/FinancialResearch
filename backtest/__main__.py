@@ -1,3 +1,4 @@
+from matplotlib import pyplot as plt
 import pandas as pd
 import backtrader as bt
 import pandasquant as pq
@@ -7,7 +8,7 @@ from .strategies import *
 
 
 # Get dataset
-data = etffeedsina('sh510300', '2019-01-01')
+data = marketdaily('600362', '20190101', '20220701')
 
 # Create a cerebro entity
 cerebro = bt.Cerebro(stdstats=False)
@@ -49,13 +50,14 @@ result = cerebro.run()
 
 # Show analyze results
 timereturn = pd.Series(result[0].analyzers.timereturn.rets)
-print(result[0].analyzers.sharperatio.rets)
-print(result[0].analyzers.timedrawdown.rets)
-print(timereturn)
-print(result[0].analyzers.ordertable.rets)
+pq.Console.print(dict(result[0].analyzers.sharperatio.rets))
+pq.Console.print(dict(result[0].analyzers.timedrawdown.rets))
+timereturn.printer.display(title='time return')
+result[0].analyzers.ordertable.rets.printer.display(title='order table')
 
 # Visualize the total strategy result
 cerebro.plot(style='candle')
+plt.savefig('test.png')
 
 # Visualize the networth curve
 # _, ax = plt.subplots(1, 1, figsize=(12, 8))

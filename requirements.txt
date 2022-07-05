@@ -1,12 +1,9 @@
 pandas
 numpy
 akshare
+baostock
 matplotlib
 statsmodels
-ipykernel
-pymysql
-redis
-pymssql
 mplfinance
 scipy
 lxml

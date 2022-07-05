@@ -1,2 +1,2 @@
 from .fund import etffeedsina
-from .stock import marketdailyapi
+from .stock import marketdaily

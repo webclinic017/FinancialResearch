@@ -4,7 +4,7 @@ import backtrader as bt
 import pandasquant as pq
 
 
-@pq.RedisCache(prefix='etffeedsina')
+@pq.Cache(prefix='etffeedsina')
 def etffeedsina(code: str, fromdate: str = None, todate: str = None):
     data = ak.fund_etf_hist_sina(symbol=code)
     data = data.rename(columns={'date': 'datetime'})
