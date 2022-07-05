@@ -7,7 +7,7 @@ from ..tools import Factor
 @Factor(name='momentum')
 def momentum():
     data = pd.read_parquet("/home/pjq/data/kline_daily")
-    ret = data['close'].converter.price2ret(period=5)
+    ret = data['close'].converter.price2ret(period=20)
     ret = ret.dropna()
     return ret
 

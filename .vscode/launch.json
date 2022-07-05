@@ -148,10 +148,10 @@
 			"module": "factor.tools"
 		},
 		{
-			"name": "factor/tester",
+			"name": "factor/script",
 			"type": "python",
 			"request": "launch",
-			"module": "factor.tester"
+			"module": "factor.script"
 		},
 		{
 			"name": "factor/define/__init__",

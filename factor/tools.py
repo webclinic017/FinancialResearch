@@ -72,11 +72,15 @@ class Factor:
             return self.factor
         return wrapper
 
-def single_factor_analysis(factor_data: pd.Series, forward_return: 'pd.Series | pd.DataFrame',
+def single_factor_analysis(factor_data: 'pd.Series | pd.DataFrame', forward_return: 'pd.Series | pd.DataFrame',
                            grouper: 'pd.Series | pd.DataFrame | dict' = None, 
                            benchmark: pd.Series = None, q: int = 5, commission: float = 0.001, 
                            commission_type: str = 'both', plot_period: 'int | str' = -1, 
                            data_path: str = None, image_path: str = None, show: bool = True):
+    if isinstance(factor_data, pd.DataFrame):
+        factor_data = factor_data.stack()
+        factor_data.name = 'factor'
+
     if isinstance(forward_return, pd.DataFrame):
         forward_return = forward_return.stack()
         forward_return.name = 'forward'
@@ -99,12 +103,15 @@ def single_factor_analysis(factor_data: pd.Series, forward_return: 'pd.Series | 
         plt.rcParams['font.family'] = ['DejaVu Serif']
     elif sys.platform == 'darwin':
         plt.rcParams['font.family'] = ['Songti SC']
+
     data_writer = pd.ExcelWriter(data_path) if data_path is not None else None
     _, axes = plt.subplots(7, 1, figsize=(12, 7 * 8))
+    
     cross_section_test(factor_data, forward_return, grouper, 
                         plot_period=plot_period, data_writer=data_writer, 
                         boxplot_ax=axes[0], scatter_ax=axes[1], 
                         hist_ax=axes[2])
+                        
     if grouper is not None:
         barra_test(factor_data, forward_return, grouper,
                     data_writer=data_writer, barra_ax=axes[3])
@@ -116,6 +123,7 @@ def single_factor_analysis(factor_data: pd.Series, forward_return: 'pd.Series | 
                   commission=commission, commission_type=commission_type,
                   benchmark=benchmark, data_writer=data_writer, 
                   layering_ax=axes[5], turnover_ax=axes[6])
+
     if image_path is not None:
         plt.savefig(image_path)
     if show:
@@ -181,7 +189,7 @@ def ic_test(factor_data: pd.Series, forward_return: pd.Series,
         if grouper is not None:
             ic_grouped.filer.to_multisheet_excel(data_writer, perspective='asset')
     if ic_ax is not None:
-        ic.drawer.draw('bar', ax=ic_ax)
+        ic.drawer.draw('bar', ax=ic_ax, width=3)
         ic.rolling(12).mean().drawer.draw('line', ax=ic_ax, title='IC test')
         ic_ax.hlines(y=0.03, xmin=ic_ax.get_xlim()[0], 
             xmax=ic_ax.get_xlim()[1], color='#aa3333', linestyle='--')
@@ -215,9 +223,10 @@ def layering_test(factor_data: pd.Series, forward_return: pd.Series, q: int = 5,
             data_writer, perspective='indicator')
 
     if layering_ax is not None:
-        profit.drawer.draw('bar', ax=layering_ax)
-        cumprofit.drawer.draw('line', ax=layering_ax.twinx(), title='layering test')
-        layering_ax.twinx().hlines(y=1, xmin=layering_ax.get_xlim()[0], 
+        layering_ax_twinx = layering_ax.twinx()
+        profit.drawer.draw('bar', ax=layering_ax, width=2)
+        cumprofit.drawer.draw('line', ax=layering_ax_twinx, title='layering test')
+        layering_ax_twinx.hlines(y=1, xmin=layering_ax.get_xlim()[0], 
             xmax=layering_ax.get_xlim()[1], color='grey', linestyle='--')
 
     if turnover_ax is not None:
